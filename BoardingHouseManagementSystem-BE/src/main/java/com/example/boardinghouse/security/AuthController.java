@@ -5,6 +5,8 @@ import com.example.boardinghouse.Modules.user.user.UserRepository;
 import com.example.boardinghouse.security.dto.LoginRequest;
 import com.example.boardinghouse.security.dto.LoginResponse;
 import com.example.boardinghouse.security.dto.RegisterRequest;
+import com.example.boardinghouse.security.dto.ForgotPasswordRequest;
+import com.example.boardinghouse.security.dto.ResetPasswordRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +16,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -24,6 +29,9 @@ public class AuthController {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    
+    // In-memory OTP storage for demonstration
+    private final Map<String, String> otpStorage = new ConcurrentHashMap<>();
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
@@ -136,5 +144,63 @@ public class AuthController {
                 .build();
 
         return ResponseEntity.ok(loginResponse);
+    }
+    
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        if (request.getIdentifier() == null) {
+            return ResponseEntity.badRequest().body("Vui lòng cung cấp Tên đăng nhập, Email hoặc Số điện thoại.");
+        }
+        
+        String identifier = request.getIdentifier();
+        Optional<User> userOptional = userRepository.findByEmail(identifier);
+        if (userOptional.isEmpty()) userOptional = userRepository.findByPhone(identifier);
+        if (userOptional.isEmpty()) userOptional = userRepository.findByUsername(identifier);
+        
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Tài khoản không tồn tại.");
+        }
+        
+        // Generate a 6-digit OTP
+        String otp = String.format("%06d", new Random().nextInt(999999));
+        
+        // Save in memory mapping identifier -> OTP
+        otpStorage.put(identifier, otp);
+        
+        // In real app, we would send Email or SMS here.
+        // For development, we return it in response to easily test.
+        return ResponseEntity.ok(Map.of(
+            "message", "Mã xác nhận đã được gửi thành công.",
+            "mockOtp", otp
+        ));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
+        if (request.getIdentifier() == null || request.getOtp() == null || request.getNewPassword() == null) {
+            return ResponseEntity.badRequest().body("Thiếu thông tin yêu cầu.");
+        }
+        
+        String storedOtp = otpStorage.get(request.getIdentifier());
+        if (storedOtp == null || !storedOtp.equals(request.getOtp())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Mã xác nhận không chính xác hoặc đã hết hạn.");
+        }
+        
+        Optional<User> userOptional = userRepository.findByEmail(request.getIdentifier());
+        if (userOptional.isEmpty()) userOptional = userRepository.findByPhone(request.getIdentifier());
+        if (userOptional.isEmpty()) userOptional = userRepository.findByUsername(request.getIdentifier());
+        
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Tài khoản không tồn tại.");
+        }
+        
+        User user = userOptional.get();
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+        
+        // Clear OTP
+        otpStorage.remove(request.getIdentifier());
+        
+        return ResponseEntity.ok("Mật khẩu đã được cập nhật thành công.");
     }
 }

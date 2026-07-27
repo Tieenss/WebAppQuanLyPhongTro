@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LoaderCircle, User, Lock, Phone, ArrowRight, ShieldCheck } from "lucide-react";
+import { LoaderCircle, User, Lock, Phone, ArrowRight, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -16,7 +16,7 @@ const registerSchema = z.object({
   phone: z.string().trim().min(10, "Số điện thoại không hợp lệ"),
   password: z.string().min(6, "Mật khẩu tối thiểu 6 ký tự"),
   confirmPassword: z.string().min(6, "Mật khẩu tối thiểu 6 ký tự"),
-  role: z.enum(["landlord", "tenant"]),
+  role: z.enum(["LANDLORD", "TENANT"]),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Mật khẩu xác nhận không khớp",
   path: ["confirmPassword"],
@@ -25,9 +25,11 @@ type RegisterValues = z.infer<typeof registerSchema>;
 
 export function RegisterForm() {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const form = useForm<RegisterValues>({ 
     resolver: zodResolver(registerSchema), 
-    defaultValues: { fullName: "", username: "", phone: "", password: "", confirmPassword: "", role: "landlord" } 
+    defaultValues: { fullName: "", username: "", phone: "", password: "", confirmPassword: "", role: "LANDLORD" } 
   });
   
   const [isRegistering, setIsRegistering] = useState(false);
@@ -89,16 +91,16 @@ export function RegisterForm() {
           {/* Role Selection */}
           <div className="grid grid-cols-2 gap-4 pb-2">
             <label className={`cursor-pointer flex items-center justify-center space-x-2 py-3 rounded-2xl border-2 transition-all ${
-              form.watch("role") === "landlord" ? "border-primary bg-sky-50 text-primary" : "border-slate-100 text-slate-500 hover:bg-slate-50"
+              form.watch("role") === "LANDLORD" ? "border-primary bg-sky-50 text-primary" : "border-slate-100 text-slate-500 hover:bg-slate-50"
             }`}>
-              <input type="radio" value="landlord" className="hidden" {...form.register("role")} />
+              <input type="radio" value="LANDLORD" className="hidden" {...form.register("role")} />
               <ShieldCheck size={18} />
               <span className="font-semibold text-sm">Chủ trọ</span>
             </label>
             <label className={`cursor-pointer flex items-center justify-center space-x-2 py-3 rounded-2xl border-2 transition-all ${
-              form.watch("role") === "tenant" ? "border-primary bg-sky-50 text-primary" : "border-slate-100 text-slate-500 hover:bg-slate-50"
+              form.watch("role") === "TENANT" ? "border-primary bg-sky-50 text-primary" : "border-slate-100 text-slate-500 hover:bg-slate-50"
             }`}>
-              <input type="radio" value="tenant" className="hidden" {...form.register("role")} />
+              <input type="radio" value="TENANT" className="hidden" {...form.register("role")} />
               <User size={18} />
               <span className="font-semibold text-sm">Khách thuê</span>
             </label>
@@ -159,14 +161,21 @@ export function RegisterForm() {
             </div>
             <input
               id="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               autoComplete="new-password"
               placeholder="Mật khẩu"
-              className={`w-full pl-11 pr-4 py-3.5 bg-slate-50/80 border ${
+              className={`w-full pl-11 pr-12 py-3.5 bg-slate-50/80 border ${
                 form.formState.errors.password ? "border-red-400" : "border-slate-200"
               } rounded-2xl outline-none focus:border-primary focus:ring-1 focus:ring-primary focus:bg-white transition-all text-sm`}
               {...form.register("password")}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
             {form.formState.errors.password && (
               <p className="text-xs text-red-500 mt-1 pl-2">{form.formState.errors.password.message}</p>
             )}
@@ -179,14 +188,21 @@ export function RegisterForm() {
             </div>
             <input
               id="confirmPassword"
-              type="password"
+              type={showConfirmPassword ? "text" : "password"}
               autoComplete="new-password"
               placeholder="Xác nhận mật khẩu"
-              className={`w-full pl-11 pr-4 py-3.5 bg-slate-50/80 border ${
+              className={`w-full pl-11 pr-12 py-3.5 bg-slate-50/80 border ${
                 form.formState.errors.confirmPassword ? "border-red-400" : "border-slate-200"
               } rounded-2xl outline-none focus:border-primary focus:ring-1 focus:ring-primary focus:bg-white transition-all text-sm`}
               {...form.register("confirmPassword")}
             />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
             {form.formState.errors.confirmPassword && (
               <p className="text-xs text-red-500 mt-1 pl-2">{form.formState.errors.confirmPassword.message}</p>
             )}

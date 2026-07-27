@@ -7,11 +7,21 @@ import { BottomNav } from "./BottomNav";
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   
-  // Do not show navigation on auth pages
-  const isAuthPage = pathname === "/login" || pathname === "/register";
+  const isAuthPage = pathname === "/login" || pathname === "/register" || pathname === "/forgot-password";
+  const isHomePage = pathname === "/";
+  const isLandlordRoute = pathname.startsWith("/landlord");
 
   if (isAuthPage) {
     return <main className="min-h-screen w-full flex items-center justify-center p-4">{children}</main>;
+  }
+
+  if (isHomePage) {
+    return <main className="min-h-screen w-full bg-slate-50">{children}</main>;
+  }
+
+  if (!isLandlordRoute) {
+    // For non-landlord routes (like tenant or admin), we don't inject the Landlord Sidebar
+    return <main className="min-h-screen w-full">{children}</main>;
   }
 
   return (

@@ -1,9 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LoaderCircle, User, Lock, ArrowRight } from "lucide-react";
-import { signIn } from "next-auth/react";
+import { LoaderCircle, User, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -17,6 +18,7 @@ type LoginValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
   const form = useForm<LoginValues>({ 
     resolver: zodResolver(loginSchema), 
     defaultValues: { identifier: "", password: "" } 
@@ -29,7 +31,20 @@ export function LoginForm() {
       return; 
     }
     toast.success("Đăng nhập thành công.");
-    router.replace("/");
+    
+    // Get session to determine role and redirect accordingly
+    const session = await getSession();
+    const userRole = session?.user?.role?.toUpperCase();
+    if (userRole === "LANDLORD") {
+      router.replace("/landlord/dashboard");
+    } else if (userRole === "ADMIN") {
+      router.replace("/admin/dashboard");
+    } else if (userRole === "TENANT") {
+      router.replace("/tenant/dashboard");
+    } else {
+      router.replace("/");
+    }
+    
     router.refresh();
   }
 
@@ -72,14 +87,21 @@ export function LoginForm() {
             </div>
             <input
               id="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               placeholder="Mật khẩu"
-              className={`w-full pl-11 pr-4 py-4 bg-slate-50/80 border ${
+              className={`w-full pl-11 pr-12 py-4 bg-slate-50/80 border ${
                 form.formState.errors.password ? "border-red-400" : "border-slate-200"
               } rounded-2xl outline-none focus:border-primary focus:ring-1 focus:ring-primary focus:bg-white transition-all text-sm`}
               {...form.register("password")}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
             {form.formState.errors.password && (
               <p className="text-xs text-red-500 mt-1 pl-2">{form.formState.errors.password.message}</p>
             )}
@@ -91,9 +113,12 @@ export function LoginForm() {
               <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary" />
               <span className="text-slate-600 font-medium">Ghi nhớ đăng nhập</span>
             </label>
-            <button type="button" className="text-primary font-semibold hover:underline">
+            <Link
+              href="/forgot-password"
+              className="text-sm font-semibold text-primary hover:text-blue-700 transition-colors"
+            >
               Quên mật khẩu?
-            </button>
+            </Link>
           </div>
 
           {/* Submit Button */}

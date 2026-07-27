@@ -9,8 +9,8 @@ export const metadata: Metadata = { title: "Nhà Trọ SaaS", description: "Hệ
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="vi">
-      <body>
+    <html lang="vi" suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <SessionProvider>
           <MainLayout>
             {children}
