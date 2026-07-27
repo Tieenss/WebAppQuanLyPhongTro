@@ -1,0 +1,2 @@
+# This folder is reserved for Spring Security configuration classes (e.g. JWT filters, SecurityFilterChain).
+# It will be populated once spring-boot-starter-security is added to the project.

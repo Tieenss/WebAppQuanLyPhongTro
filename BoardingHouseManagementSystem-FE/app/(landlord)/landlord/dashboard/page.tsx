@@ -1,0 +1,3 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+const metrics = [{ label: "Phòng đang thuê", value: "0" }, { label: "Hợp đồng hiệu lực", value: "0" }, { label: "Hóa đơn chờ thanh toán", value: "0" }];
+export default function LandlordDashboardPage() { return <><h1 className="text-2xl font-bold">Dashboard chủ trọ</h1><p className="mt-1 text-slate-500">Theo dõi tình hình nhà trọ của bạn.</p><section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{metrics.map((metric) => <Card key={metric.label}><CardHeader><CardTitle className="text-sm text-slate-500">{metric.label}</CardTitle></CardHeader><CardContent><p className="text-3xl font-bold">{metric.value}</p></CardContent></Card>)}</section></>; }
