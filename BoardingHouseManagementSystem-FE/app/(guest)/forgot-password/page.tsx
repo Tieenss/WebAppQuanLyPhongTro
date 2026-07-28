@@ -1,5 +1,6 @@
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 import { Building2 } from "lucide-react";
+import Link from "next/link";
 
 export default function ForgotPasswordPage() { 
   return (
@@ -15,10 +16,10 @@ export default function ForgotPasswordPage() {
         <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-[-10%] left-[-10%] w-96 h-96 bg-blue-400/20 rounded-full blur-3xl"></div>
         
-        <div className="relative z-10 flex items-center justify-end space-x-3 text-white">
+        <Link href="/" className="relative z-10 flex items-center justify-end space-x-3 text-white hover:text-blue-100 transition-colors w-fit ml-auto cursor-pointer">
           <span className="text-2xl font-bold tracking-tight">Nhà Trọ SaaS</span>
           <Building2 size={36} />
-        </div>
+        </Link>
         
         <div className="relative z-10 space-y-6 text-right">
           <h1 className="text-5xl font-extrabold text-white leading-tight">

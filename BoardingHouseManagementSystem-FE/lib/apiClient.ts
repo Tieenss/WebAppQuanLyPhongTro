@@ -5,8 +5,12 @@ import { getSession, signOut } from "next-auth/react";
 import { toast } from "sonner";
 import type { ApiErrorResponse } from "@/types/auth";
 
+const baseUrl = process.env.NEXT_PUBLIC_API_URL?.endsWith('/api')
+  ? process.env.NEXT_PUBLIC_API_URL
+  : `${process.env.NEXT_PUBLIC_API_URL}/api`;
+
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: baseUrl,
   headers: { "Content-Type": "application/json" },
 });
 

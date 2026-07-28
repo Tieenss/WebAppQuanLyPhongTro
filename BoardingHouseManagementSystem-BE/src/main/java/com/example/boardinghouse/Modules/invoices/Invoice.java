@@ -48,6 +48,30 @@ public class Invoice {
     @Column(name = "service_price", nullable = false, precision = 15, scale = 2)
     private BigDecimal servicePrice;
 
+    @Column(name = "internet_price", precision = 15, scale = 2)
+    @Builder.Default
+    private BigDecimal internetPrice = BigDecimal.ZERO;
+
+    @Column(name = "cleaning_price", precision = 15, scale = 2)
+    @Builder.Default
+    private BigDecimal cleaningPrice = BigDecimal.ZERO;
+
+    @Column(name = "parking_price", precision = 15, scale = 2)
+    @Builder.Default
+    private BigDecimal parkingPrice = BigDecimal.ZERO;
+
+    @Column(name = "other_price", precision = 15, scale = 2)
+    @Builder.Default
+    private BigDecimal otherPrice = BigDecimal.ZERO;
+
+    @Column(name = "debt_from_previous_month", precision = 15, scale = 2)
+    @Builder.Default
+    private BigDecimal debtFromPreviousMonth = BigDecimal.ZERO;
+
+    @Column(name = "discount", precision = 15, scale = 2)
+    @Builder.Default
+    private BigDecimal discount = BigDecimal.ZERO;
+
     @Column(name = "total_amount", nullable = false, precision = 15, scale = 2)
     private BigDecimal totalAmount;
 

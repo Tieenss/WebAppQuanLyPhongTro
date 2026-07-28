@@ -18,6 +18,13 @@ public class InvoiceCreateRequest {
     
     // Phí dịch vụ khác (rác, wifi...)
     private BigDecimal servicePrice;
+
+    private BigDecimal internetPrice;
+    private BigDecimal cleaningPrice;
+    private BigDecimal parkingPrice;
+    private BigDecimal otherPrice;
+    private BigDecimal debtFromPreviousMonth;
+    private BigDecimal discount;
     
     // Hạn thanh toán
     private LocalDate dueDate;

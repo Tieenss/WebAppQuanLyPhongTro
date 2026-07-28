@@ -34,7 +34,7 @@ export function RoomCard({ room, onViewNow }: RoomCardProps) {
           </div>
         )}
         <div className="absolute top-4 left-4 flex gap-2">
-          {room.status === "AVAILABLE" && (
+          {room.status === "available" && (
             <Badge variant="success" className="shadow-sm">Đang trống</Badge>
           )}
         </div>

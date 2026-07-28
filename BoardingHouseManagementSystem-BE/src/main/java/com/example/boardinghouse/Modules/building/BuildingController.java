@@ -22,8 +22,21 @@ public class BuildingController {
     }
 
     @GetMapping
-    public ResponseEntity<List<BuildingResponse>> getAllBuildings() {
-        return ResponseEntity.ok(buildingService.getAllBuildings());
+    public ResponseEntity<List<BuildingResponse>> getAllBuildings(org.springframework.security.core.Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String userIdStr = (String) authentication.getPrincipal();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        
+        if (isAdmin) {
+            return ResponseEntity.ok(buildingService.getAllBuildings());
+        } else {
+            Long landlordId = Long.parseLong(userIdStr);
+            return ResponseEntity.ok(buildingService.getBuildingsByLandlordId(landlordId));
+        }
     }
 
     @GetMapping("/{id}")

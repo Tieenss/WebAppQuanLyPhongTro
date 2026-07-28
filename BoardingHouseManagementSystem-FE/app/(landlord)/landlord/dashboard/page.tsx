@@ -16,22 +16,25 @@ async function fetchDashboardData() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
   
   try {
-    const [roomsRes, tenantsRes, invoicesRes, issuesRes] = await Promise.all([
+    const [roomsRes, tenantsRes, invoicesRes, issuesRes, activitiesRes] = await Promise.all([
       fetch(`${apiUrl}/api/rooms`, { headers, cache: "no-store" }),
       fetch(`${apiUrl}/api/tenants`, { headers, cache: "no-store" }),
       fetch(`${apiUrl}/api/invoices`, { headers, cache: "no-store" }),
-      fetch(`${apiUrl}/api/issues`, { headers, cache: "no-store" })
+      fetch(`${apiUrl}/api/issues`, { headers, cache: "no-store" }),
+      fetch(`${apiUrl}/api/activities/recent?limit=5`, { headers, cache: "no-store" })
     ]);
 
     const roomsResData = roomsRes.ok ? await roomsRes.json() : { data: [] };
     const tenantsResData = tenantsRes.ok ? await tenantsRes.json() : { data: [] };
     const invoicesResData = invoicesRes.ok ? await invoicesRes.json() : { data: [] };
     const issuesResData = issuesRes.ok ? await issuesRes.json() : { data: [] };
+    const activitiesResData = activitiesRes.ok ? await activitiesRes.json() : [];
 
     const rooms = Array.isArray(roomsResData) ? roomsResData : (roomsResData.data || []);
     const tenants = Array.isArray(tenantsResData) ? tenantsResData : (tenantsResData.data || []);
     const invoices = Array.isArray(invoicesResData) ? invoicesResData : (invoicesResData.data || []);
     const issues = Array.isArray(issuesResData) ? issuesResData : (issuesResData.data || []);
+    const activities = Array.isArray(activitiesResData) ? activitiesResData : [];
 
     const rentedRoomsCount = rooms.filter((r: any) => r.status === "RENTED").length;
     const unpaidInvoicesCount = invoices.filter((i: any) => i.status === "UNPAID" || i.status === "PENDING").length;
@@ -42,11 +45,12 @@ async function fetchDashboardData() {
       tenantsCount: tenants.length,
       unpaidInvoicesCount,
       pendingIssuesCount,
-      invoices
+      invoices,
+      activities
     };
   } catch (error) {
     console.error("Lỗi khi tải dữ liệu dashboard:", error);
-    return { rentedRoomsCount: 0, tenantsCount: 0, unpaidInvoicesCount: 0, pendingIssuesCount: 0, invoices: [] };
+    return { rentedRoomsCount: 0, tenantsCount: 0, unpaidInvoicesCount: 0, pendingIssuesCount: 0, invoices: [], activities: [] };
   }
 }
 
@@ -101,22 +105,29 @@ export default async function LandlordDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {[
-                { time: "10 phút trước", event: "Nguyễn Văn A đã thanh toán hóa đơn #1234", type: "success" },
-                { time: "1 giờ trước", event: "Phòng 102 báo cáo sự cố rò rỉ nước", type: "warning" },
-                { time: "Hôm qua", event: "Khách thuê mới dọn vào phòng 205", type: "info" },
-              ].map((activity, i) => (
-                <div key={i} className="flex items-start gap-4">
-                  <div className={`w-2 h-2 mt-2 rounded-full ${
-                    activity.type === 'success' ? 'bg-emerald-500' : 
-                    activity.type === 'warning' ? 'bg-red-500' : 'bg-blue-500'
-                  }`} />
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">{activity.event}</p>
-                    <p className="text-xs text-slate-500 mt-1">{activity.time}</p>
-                  </div>
-                </div>
-              ))}
+              {data.activities.length === 0 ? (
+                 <p className="text-sm text-slate-500 italic">Chưa có hoạt động nào được ghi nhận.</p>
+              ) : (
+                data.activities.map((activity: any, i: number) => {
+                  let colorClass = 'bg-blue-500';
+                  if (activity.actionType === 'CREATE') colorClass = 'bg-emerald-500';
+                  else if (activity.actionType === 'DELETE') colorClass = 'bg-red-500';
+                  
+                  // Simple formatting for time
+                  const date = new Date(activity.createdAt);
+                  const timeString = date.toLocaleDateString('vi-VN') + " " + date.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+
+                  return (
+                    <div key={activity.id || i} className="flex items-start gap-4">
+                      <div className={`w-2 h-2 mt-2 rounded-full ${colorClass}`} />
+                      <div>
+                        <p className="text-sm font-medium text-slate-900">{activity.description}</p>
+                        <p className="text-xs text-slate-500 mt-1">{timeString}</p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </CardContent>
         </Card>

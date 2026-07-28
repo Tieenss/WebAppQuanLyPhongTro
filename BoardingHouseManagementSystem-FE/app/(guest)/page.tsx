@@ -7,7 +7,7 @@ async function getAvailableRooms(): Promise<Room[]> {
   try {
     // Note: process.env.NEXT_PUBLIC_API_URL should be available on the server side as well during build/runtime
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-    const res = await fetch(`${apiUrl}/api/rooms/status/AVAILABLE`, {
+    const res = await fetch(`${apiUrl}/api/rooms/status/available`, {
       cache: "no-store", // We want fresh data for available rooms
     });
     

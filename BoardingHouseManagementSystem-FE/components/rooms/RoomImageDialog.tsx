@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { X, ImageIcon } from "lucide-react";
+import { X, ImageIcon, Expand, Users, CheckCircle2 } from "lucide-react";
 import { Room } from "@/types/room";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -58,10 +58,48 @@ export function RoomImageDialog({ room, onClose }: RoomImageDialogProps) {
         
         <div className="p-6">
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Phòng {room.roomNumber} - {room.buildingName}</h2>
-          <p className="text-slate-600 mb-4">{room.description || "Chưa có mô tả chi tiết."}</p>
-          <div className="flex justify-between items-center">
-            <p className="text-2xl font-bold text-blue-600">
-              {new Intl.NumberFormat("vi-VN").format(room.price)}đ<span className="text-sm text-slate-500 font-normal">/tháng</span>
+          
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <p className="text-sm text-slate-500 mb-1">Diện tích</p>
+              <p className="font-semibold text-slate-900 flex items-center">
+                <Expand size={16} className="mr-2 text-blue-500" />
+                {room.area} m²
+              </p>
+            </div>
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <p className="text-sm text-slate-500 mb-1">Tối đa</p>
+              <p className="font-semibold text-slate-900 flex items-center">
+                <Users size={16} className="mr-2 text-blue-500" />
+                {room.maxOccupants} người
+              </p>
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <h3 className="font-semibold text-slate-900 mb-2 text-sm uppercase tracking-wider">Mô tả chi tiết</h3>
+            <p className="text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 whitespace-pre-wrap text-sm leading-relaxed">
+              {room.description || "Chưa có mô tả chi tiết."}
+            </p>
+          </div>
+          
+          {room.amenities && (
+            <div className="mb-6">
+              <h3 className="font-semibold text-slate-900 mb-3 text-sm uppercase tracking-wider">Tiện ích</h3>
+              <div className="flex flex-wrap gap-2">
+                {room.amenities.split(',').map((amenity, idx) => (
+                  <span key={idx} className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                    <CheckCircle2 size={14} className="mr-1.5" />
+                    {amenity.trim()}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-between items-center pt-4 border-t border-slate-100">
+            <p className="text-3xl font-bold text-blue-600">
+              {new Intl.NumberFormat("vi-VN").format(room.price)}đ<span className="text-base text-slate-500 font-normal">/tháng</span>
             </p>
             <button
               onClick={onClose}

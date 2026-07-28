@@ -19,6 +19,12 @@ public class InvoiceResponse {
     private BigDecimal electricityPrice;
     private BigDecimal waterPrice;
     private BigDecimal servicePrice;
+    private BigDecimal internetPrice;
+    private BigDecimal cleaningPrice;
+    private BigDecimal parkingPrice;
+    private BigDecimal otherPrice;
+    private BigDecimal debtFromPreviousMonth;
+    private BigDecimal discount;
     private BigDecimal totalAmount;
     private LocalDate dueDate;
     private Invoice.InvoiceStatus status;

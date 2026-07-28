@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import apiClient from "@/lib/apiClient";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 
 type PropertyStatus = "Hoạt động" | "Không hoạt động";
 
@@ -27,6 +28,7 @@ interface Building {
 const ALL_AMENITIES = ["Wifi", "Chỗ để xe", "Bảo vệ 24/7", "Camera an ninh", "Vệ sinh chung", "Thang máy", "Máy giặt chung", "Sân phơi"];
 
 export default function BuildingsPage() {
+  const { data: session } = useSession();
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("Tất cả");
@@ -46,6 +48,15 @@ export default function BuildingsPage() {
       const res = await apiClient.get('/buildings');
       // Giả sử res.data là mảng hoặc nằm trong res.data.data
       let data = Array.isArray(res.data) ? res.data : res.data?.data || [];
+      
+      // Parse chuỗi amenities thành mảng
+      data = data.map((b: any) => ({
+        ...b,
+        amenities: typeof b.amenities === 'string' && b.amenities.trim() !== '' 
+          ? b.amenities.split(',').map((a: string) => a.trim()) 
+          : []
+      }));
+
       const sorted = [...data].sort((a: Building, b: Building) => {
         const nameA = a.name || a.buildingName || "";
         const nameB = b.name || b.buildingName || "";
@@ -136,17 +147,29 @@ export default function BuildingsPage() {
     try {
       const isNew = selectedId?.startsWith("NEW_");
       let savedBuilding: Building;
+      
+      const payload: any = { 
+        ...editForm,
+        landlordId: session?.user?.id ? parseInt(session.user.id) : 1, // Fallback if no session
+        amenities: editForm.amenities ? editForm.amenities.join(', ') : ''
+      };
 
       if (isNew) {
-        const payload = { ...editForm };
         delete payload.id;
         const res = await apiClient.post('/buildings', payload);
         savedBuilding = res.data?.data || res.data;
         toast.success("Thêm mới thành công!");
       } else {
-        const res = await apiClient.put(`/buildings/${selectedId}`, editForm);
+        const res = await apiClient.put(`/buildings/${selectedId}`, payload);
         savedBuilding = res.data?.data || res.data;
         toast.success("Cập nhật thành công!");
+      }
+      
+      // Đảm bảo parse lại amenities từ backend trả về
+      if (typeof savedBuilding.amenities === 'string') {
+        savedBuilding.amenities = (savedBuilding.amenities as string).split(',').map(a => a.trim()).filter(a => a);
+      } else if (!savedBuilding.amenities) {
+        savedBuilding.amenities = [];
       }
 
       setBuildings(prev => {

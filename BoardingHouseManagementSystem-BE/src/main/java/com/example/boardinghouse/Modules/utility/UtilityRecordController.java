@@ -29,4 +29,10 @@ public class UtilityRecordController {
         List<UtilityRecordResponse> responses = utilityRecordService.getUtilityRecordsByRoom(roomId);
         return ResponseEntity.ok(ApiResponse.success(responses, "Fetched utility records successfully"));
     }
+
+    @GetMapping("/room/{roomId}/latest")
+    public ResponseEntity<ApiResponse<UtilityRecordResponse>> getLatestUtilityRecordByRoom(@PathVariable Long roomId) {
+        UtilityRecordResponse response = utilityRecordService.getLatestUtilityRecordByRoom(roomId);
+        return ResponseEntity.ok(ApiResponse.success(response, "Fetched latest utility record successfully"));
+    }
 }

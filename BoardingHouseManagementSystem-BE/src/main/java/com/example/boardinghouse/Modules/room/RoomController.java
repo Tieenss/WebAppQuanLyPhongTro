@@ -4,7 +4,9 @@ import com.example.boardinghouse.Modules.room.dto.RoomRequest;
 import com.example.boardinghouse.Modules.room.dto.RoomResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,8 +19,21 @@ public class RoomController {
     private RoomService roomService;
 
     @GetMapping
-    public ResponseEntity<List<RoomResponse>> getAllRooms() {
-        return ResponseEntity.ok(roomService.getAllRooms());
+    public ResponseEntity<List<RoomResponse>> getAllRooms(Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String userIdStr = (String) authentication.getPrincipal();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        
+        if (isAdmin) {
+            return ResponseEntity.ok(roomService.getAllRooms());
+        } else {
+            Long landlordId = Long.parseLong(userIdStr);
+            return ResponseEntity.ok(roomService.getRoomsByLandlordId(landlordId));
+        }
     }
 
     @GetMapping("/building/{buildingId}")

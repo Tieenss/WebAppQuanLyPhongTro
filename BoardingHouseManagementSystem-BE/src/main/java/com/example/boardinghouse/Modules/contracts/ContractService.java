@@ -38,6 +38,12 @@ public class ContractService {
         return mapToResponse(contract);
     }
 
+    public List<ContractResponse> getActiveContractsByLandlordId(Long landlordId) {
+        return contractRepository.findByRoomBuildingLandlordIdAndStatus(landlordId, "active").stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     public ContractResponse createContract(ContractRequest request) {
         Room room = roomRepository.findById(request.getRoomId())
                 .orElseThrow(() -> new RuntimeException("Room not found"));
@@ -121,7 +127,6 @@ public class ContractService {
                 .endDate(contract.getEndDate())
                 .deposit(contract.getDeposit())
                 .rentalPrice(contract.getRentalPrice())
-                .deposit(contract.getDeposit())
                 .status(contract.getStatus())
                 .appointmentId(contract.getAppointmentId())
                 .createdAt(contract.getCreatedAt())

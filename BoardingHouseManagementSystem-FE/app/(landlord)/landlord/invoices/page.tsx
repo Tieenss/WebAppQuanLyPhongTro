@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Search, Filter, MoreVertical, FileText, CheckCircle2 } from "lucide-react";
+import { Plus, Search, Filter, MoreVertical, FileText, CheckCircle2, ArrowLeft } from "lucide-react";
 import { CreateInvoiceModal } from "@/components/invoices/CreateInvoiceModal";
+import Link from "next/link";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<any[]>([]);
-  const [rooms, setRooms] = useState<any[]>([]);
+  const [contracts, setContracts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -19,21 +20,21 @@ export default function InvoicesPage() {
       const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
-      const [invRes, roomsRes] = await Promise.all([
+      const [invRes, contractsRes] = await Promise.all([
         fetch(`${apiUrl}/api/invoices`, { headers }),
-        fetch(`${apiUrl}/api/rooms`, { headers })
+        fetch(`${apiUrl}/api/contracts/active`, { headers })
       ]);
 
-      const [invResData, roomsResData] = await Promise.all([
+      const [invResData, contractsResData] = await Promise.all([
         invRes.ok ? invRes.json() : { data: [] },
-        roomsRes.ok ? roomsRes.json() : { data: [] }
+        contractsRes.ok ? contractsRes.json() : { data: [] }
       ]);
 
       const invData = Array.isArray(invResData) ? invResData : (invResData.data || []);
-      const roomsData = Array.isArray(roomsResData) ? roomsResData : (roomsResData.data || []);
+      const contractsData = Array.isArray(contractsResData) ? contractsResData : (contractsResData.data || []);
 
       setInvoices(invData);
-      setRooms(roomsData.filter((r: any) => r.status === "RENTED"));
+      setContracts(contractsData);
     } catch (error) {
       console.error("Failed to fetch data", error);
     } finally {
@@ -69,9 +70,14 @@ export default function InvoicesPage() {
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Quản lý Hóa đơn</h1>
-          <p className="mt-1 text-sm text-slate-500">Tạo mới, theo dõi và quản lý các khoản thu tiền phòng, điện nước.</p>
+        <div className="flex items-start sm:items-center gap-3">
+          <Link href="/landlord/management" className="text-slate-400 hover:text-blue-600 transition-colors mt-1 sm:mt-0">
+            <ArrowLeft className="w-6 h-6" />
+          </Link>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Quản lý Hóa đơn</h1>
+            <p className="mt-1 text-sm text-slate-500">Tạo mới, theo dõi và quản lý các khoản thu tiền phòng, điện nước.</p>
+          </div>
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
@@ -197,7 +203,7 @@ export default function InvoicesPage() {
       <CreateInvoiceModal 
         isOpen={isModalOpen} 
         onOpenChange={setIsModalOpen} 
-        rooms={rooms}
+        contracts={contracts}
         onSuccess={fetchData}
       />
     </div>

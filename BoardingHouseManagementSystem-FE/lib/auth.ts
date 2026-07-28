@@ -16,7 +16,8 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.identifier || !credentials.password || !apiBaseUrl) return null;
-        const response = await fetch(`${apiBaseUrl}/auth/login`, {
+        const base = apiBaseUrl.endsWith('/api') ? apiBaseUrl : `${apiBaseUrl}/api`;
+        const response = await fetch(`${base}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ identifier: credentials.identifier, password: credentials.password }),

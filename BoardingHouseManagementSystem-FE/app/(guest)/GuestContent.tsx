@@ -15,6 +15,7 @@ interface GuestContentProps {
 export function GuestContent({ initialRooms }: GuestContentProps) {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [activeFilter, setActiveFilter] = useState<string>("Tất cả");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const featuredAreas = ["Tất cả", "Quận 1", "Quận Bình Thạnh", "Quận 7", "Thủ Đức"];
 
@@ -22,8 +23,17 @@ export function GuestContent({ initialRooms }: GuestContentProps) {
   // Thực tế cần filter dựa vào property của Room (vd: address, buildingName).
   // Ở đây chúng ta filter tạm theo buildingName nếu nó chứa tên quận.
   const filteredRooms = initialRooms.filter((room) => {
-    if (activeFilter === "Tất cả") return true;
-    return room.buildingName?.toLowerCase().includes(activeFilter.toLowerCase()) || true; // Fallback to true if mock data doesn't match
+    // Lọc theo Tab khu vực
+    const matchTab = activeFilter === "Tất cả" || 
+      (room.buildingName && room.buildingName.toLowerCase().includes(activeFilter.toLowerCase()));
+      
+    // Lọc theo từ khóa tìm kiếm (tên tòa nhà, địa chỉ, hoặc số phòng)
+    const matchSearch = !searchQuery || 
+      (room.buildingName && room.buildingName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (room.roomNumber && room.roomNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (room.address && room.address.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+    return matchTab && matchSearch;
   });
 
   return (
@@ -52,13 +62,18 @@ export function GuestContent({ initialRooms }: GuestContentProps) {
               Khám phá không gian sống lý tưởng với thông tin minh bạch, rõ ràng và công cụ quản lý trọn gói trong một nền tảng.
             </p>
 
-            <form className="mx-auto flex max-w-2xl flex-col gap-3 rounded-2xl border border-white/40 bg-white/60 p-3 shadow-xl backdrop-blur-xl sm:flex-row transition-all hover:bg-white/80 duration-500">
+            <form 
+              onSubmit={(e) => e.preventDefault()}
+              className="mx-auto flex max-w-2xl flex-col gap-3 rounded-2xl border border-white/40 bg-white/60 p-3 shadow-xl backdrop-blur-xl sm:flex-row transition-all hover:bg-white/80 duration-500"
+            >
               <div className="relative flex-1">
                 <MapPin className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
                 <Input 
                   aria-label="Khu vực tìm kiếm" 
                   className="pl-11 py-6 bg-white/80 border-slate-200 focus:border-blue-500 text-base rounded-xl" 
                   placeholder="Nhập khu vực, quận hoặc tên tòa nhà..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
               <Button type="submit" size="lg" className="bg-blue-600 hover:bg-blue-700 text-white py-6 px-8 rounded-xl text-base shadow-md">

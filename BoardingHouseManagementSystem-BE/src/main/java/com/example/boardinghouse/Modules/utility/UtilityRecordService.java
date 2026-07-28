@@ -57,6 +57,12 @@ public class UtilityRecordService {
                 .collect(Collectors.toList());
     }
 
+    public UtilityRecordResponse getLatestUtilityRecordByRoom(Long roomId) {
+        return utilityRecordRepository.findTopByRoomIdOrderByRecordDateDesc(roomId)
+                .map(this::mapToResponse)
+                .orElse(null);
+    }
+
     private UtilityRecordResponse mapToResponse(UtilityRecord record) {
         return UtilityRecordResponse.builder()
                 .id(record.getId())

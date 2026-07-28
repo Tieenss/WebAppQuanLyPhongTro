@@ -2,6 +2,7 @@ package com.example.boardinghouse.Modules.building;
 
 import com.example.boardinghouse.Modules.building.dto.BuildingRequest;
 import com.example.boardinghouse.Modules.building.dto.BuildingResponse;
+import com.example.boardinghouse.Modules.activitylog.ActivityLogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,10 +14,12 @@ import java.util.stream.Collectors;
 public class BuildingService {
 
     private final BuildingRepository buildingRepository;
+    private final ActivityLogService activityLogService;
 
     @Autowired
-    public BuildingService(BuildingRepository buildingRepository) {
+    public BuildingService(BuildingRepository buildingRepository, ActivityLogService activityLogService) {
         this.buildingRepository = buildingRepository;
+        this.activityLogService = activityLogService;
     }
 
     public List<BuildingResponse> getAllBuildings() {
@@ -45,6 +48,9 @@ public class BuildingService {
                 .build();
         
         Building savedBuilding = buildingRepository.save(building);
+        
+        activityLogService.logActivity(savedBuilding.getLandlordId(), "CREATE", "BUILDING", "Đã thêm mới tòa nhà: " + savedBuilding.getName());
+        
         return mapToResponse(savedBuilding);
     }
 
@@ -57,12 +63,18 @@ public class BuildingService {
             building.setLandlordId(request.getLandlordId());
             
             Building updatedBuilding = buildingRepository.save(building);
+            
+            activityLogService.logActivity(updatedBuilding.getLandlordId(), "UPDATE", "BUILDING", "Đã cập nhật tòa nhà: " + updatedBuilding.getName());
+            
             return mapToResponse(updatedBuilding);
         }).orElseThrow(() -> new RuntimeException("Building not found with id " + id));
     }
 
     public void deleteBuilding(Long id) {
-        buildingRepository.deleteById(id);
+        buildingRepository.findById(id).ifPresent(building -> {
+            buildingRepository.deleteById(id);
+            activityLogService.logActivity(building.getLandlordId(), "DELETE", "BUILDING", "Đã xóa tòa nhà: " + building.getName());
+        });
     }
 
     private BuildingResponse mapToResponse(Building building) {

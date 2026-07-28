@@ -57,23 +57,36 @@ public class InvoiceService {
         // Calculate Amounts
         BigDecimal electricityPriceTotal = request.getElectricityUnitPrice().multiply(BigDecimal.valueOf(electricityUsage));
         BigDecimal waterPriceTotal = request.getWaterUnitPrice().multiply(BigDecimal.valueOf(waterUsage));
-        BigDecimal roomPrice = contract.getRentalPrice();
-        BigDecimal servicePrice = request.getServicePrice() != null ? request.getServicePrice() : BigDecimal.ZERO;
+        BigDecimal electricityCost = request.getElectricityUnitPrice().multiply(BigDecimal.valueOf(electricityUsage));
+        BigDecimal waterCost = request.getWaterUnitPrice().multiply(BigDecimal.valueOf(waterUsage));
 
-        BigDecimal totalAmount = electricityPriceTotal.add(waterPriceTotal).add(roomPrice).add(servicePrice);
-
-        // Generate Invoice Code
-        String invoiceCode = "INV-" + contract.getRoom().getId() + "-" + currentUtilityRecord.getRecordDate().getYear() + String.format("%02d", currentUtilityRecord.getRecordDate().getMonthValue());
+        // Total = roomPrice + electricityPrice + waterPrice + servicePrice + internetPrice + cleaningPrice + parkingPrice + otherPrice + debt - discount
+        BigDecimal totalAmount = contract.getRentalPrice()
+                .add(electricityCost)
+                .add(waterCost)
+                .add(request.getServicePrice() != null ? request.getServicePrice() : BigDecimal.ZERO)
+                .add(request.getInternetPrice() != null ? request.getInternetPrice() : BigDecimal.ZERO)
+                .add(request.getCleaningPrice() != null ? request.getCleaningPrice() : BigDecimal.ZERO)
+                .add(request.getParkingPrice() != null ? request.getParkingPrice() : BigDecimal.ZERO)
+                .add(request.getOtherPrice() != null ? request.getOtherPrice() : BigDecimal.ZERO)
+                .add(request.getDebtFromPreviousMonth() != null ? request.getDebtFromPreviousMonth() : BigDecimal.ZERO)
+                .subtract(request.getDiscount() != null ? request.getDiscount() : BigDecimal.ZERO);
 
         // Create Entity
         Invoice invoice = Invoice.builder()
                 .contractId(contract.getId())
-                .utilityRecordId(currentUtilityRecord.getId())
-                .invoiceCode(invoiceCode)
-                .roomPrice(roomPrice)
-                .electricityPrice(electricityPriceTotal)
-                .waterPrice(waterPriceTotal)
-                .servicePrice(servicePrice)
+                .utilityRecordId(request.getUtilityRecordId())
+                .invoiceCode("INV-" + System.currentTimeMillis())
+                .roomPrice(contract.getRentalPrice())
+                .electricityPrice(electricityCost)
+                .waterPrice(waterCost)
+                .servicePrice(request.getServicePrice() != null ? request.getServicePrice() : BigDecimal.ZERO)
+                .internetPrice(request.getInternetPrice() != null ? request.getInternetPrice() : BigDecimal.ZERO)
+                .cleaningPrice(request.getCleaningPrice() != null ? request.getCleaningPrice() : BigDecimal.ZERO)
+                .parkingPrice(request.getParkingPrice() != null ? request.getParkingPrice() : BigDecimal.ZERO)
+                .otherPrice(request.getOtherPrice() != null ? request.getOtherPrice() : BigDecimal.ZERO)
+                .debtFromPreviousMonth(request.getDebtFromPreviousMonth() != null ? request.getDebtFromPreviousMonth() : BigDecimal.ZERO)
+                .discount(request.getDiscount() != null ? request.getDiscount() : BigDecimal.ZERO)
                 .totalAmount(totalAmount)
                 .dueDate(request.getDueDate())
                 .status(Invoice.InvoiceStatus.PENDING)
@@ -117,6 +130,12 @@ public class InvoiceService {
                 .electricityPrice(invoice.getElectricityPrice())
                 .waterPrice(invoice.getWaterPrice())
                 .servicePrice(invoice.getServicePrice())
+                .internetPrice(invoice.getInternetPrice())
+                .cleaningPrice(invoice.getCleaningPrice())
+                .parkingPrice(invoice.getParkingPrice())
+                .otherPrice(invoice.getOtherPrice())
+                .debtFromPreviousMonth(invoice.getDebtFromPreviousMonth())
+                .discount(invoice.getDiscount())
                 .totalAmount(invoice.getTotalAmount())
                 .dueDate(invoice.getDueDate())
                 .status(invoice.getStatus())

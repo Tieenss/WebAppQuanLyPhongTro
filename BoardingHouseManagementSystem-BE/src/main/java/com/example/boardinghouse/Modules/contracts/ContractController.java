@@ -4,7 +4,9 @@ import com.example.boardinghouse.Modules.contracts.dto.ContractRequest;
 import com.example.boardinghouse.Modules.contracts.dto.ContractResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,8 +19,30 @@ public class ContractController {
     private ContractService contractService;
 
     @GetMapping
-    public ResponseEntity<List<ContractResponse>> getAllContracts() {
-        return ResponseEntity.ok(contractService.getAllContracts());
+    public ResponseEntity<List<ContractResponse>> getAllContracts(Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        String userIdStr = (String) authentication.getPrincipal();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+                
+        if (isAdmin) {
+            return ResponseEntity.ok(contractService.getAllContracts());
+        } else {
+            Long landlordId = Long.parseLong(userIdStr);
+            return ResponseEntity.ok(contractService.getActiveContractsByLandlordId(landlordId)); // Temporary reuse, ideally separate endpoint for all landlord's contracts
+        }
+    }
+
+    @GetMapping("/active")
+    public ResponseEntity<List<ContractResponse>> getActiveContracts(Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        Long landlordId = Long.parseLong((String) authentication.getPrincipal());
+        return ResponseEntity.ok(contractService.getActiveContractsByLandlordId(landlordId));
     }
 
     @GetMapping("/{id}")
