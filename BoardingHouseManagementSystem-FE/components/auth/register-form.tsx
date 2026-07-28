@@ -88,7 +88,7 @@ export function RegisterForm() {
       <div className="w-full bg-white lg:bg-transparent lg:p-0 rounded-[2rem] shadow-xl lg:shadow-none p-8">
         <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)}>
           
-          {/* Role Selection */}
+          {/* Lựa chọn Vai trò */}
           <div className="grid grid-cols-2 gap-4 pb-2">
             <label className={`cursor-pointer flex items-center justify-center space-x-2 py-3 rounded-2xl border-2 transition-all ${
               form.watch("role") === "LANDLORD" ? "border-primary bg-sky-50 text-primary" : "border-slate-100 text-slate-500 hover:bg-slate-50"
@@ -107,7 +107,7 @@ export function RegisterForm() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-             {/* FullName Input */}
+             {/* Nhập Họ và tên */}
             <div className="relative col-span-2">
               <input
                 id="fullName"
@@ -122,7 +122,7 @@ export function RegisterForm() {
               )}
             </div>
 
-            {/* Username Input */}
+            {/* Nhập Tên đăng nhập */}
             <div className="relative col-span-1">
               <input
                 id="username"
@@ -138,7 +138,7 @@ export function RegisterForm() {
               )}
             </div>
 
-            {/* Phone Input */}
+            {/* Nhập Số điện thoại */}
             <div className="relative col-span-1">
               <input
                 id="phone"
@@ -154,7 +154,7 @@ export function RegisterForm() {
             </div>
           </div>
 
-          {/* Password Input */}
+          {/* Nhập Mật khẩu */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
               <Lock size={20} />
@@ -181,7 +181,7 @@ export function RegisterForm() {
             )}
           </div>
 
-          {/* Confirm Password Input */}
+          {/* Nhập lại Mật khẩu */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
               <Lock size={20} />
@@ -208,7 +208,7 @@ export function RegisterForm() {
             )}
           </div>
 
-          {/* Submit Button */}
+          {/* Nút đăng ký */}
           <div className="pt-2">
             <button
               type="submit"

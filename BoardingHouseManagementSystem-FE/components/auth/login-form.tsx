@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoaderCircle, User, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { signIn, getSession } from "next-auth/react";
@@ -32,14 +33,16 @@ export function LoginForm() {
     }
     toast.success("Đăng nhập thành công.");
     
-    // Get session to determine role and redirect accordingly
+    // Lấy thông tin session hiện tại để kiểm tra phân quyền (role)
     const session = await getSession();
-    const userRole = session?.user?.role?.toUpperCase();
-    if (userRole === "LANDLORD") {
-      router.replace("/landlord/dashboard");
-    } else if (userRole === "ADMIN") {
+    const role = session?.user?.role;
+    
+    // Chuyển hướng tùy thuộc vào quyền của người dùng
+    if (role === "LANDLORD") {
+      router.replace("/landlord/management");
+    } else if (role === "ADMIN") {
       router.replace("/admin/dashboard");
-    } else if (userRole === "TENANT") {
+    } else if (role === "TENANT") {
       router.replace("/tenant/dashboard");
     } else {
       router.replace("/");
@@ -61,7 +64,7 @@ export function LoginForm() {
 
       <div className="w-full bg-white lg:bg-transparent lg:p-0 rounded-[2rem] shadow-xl lg:shadow-none p-8">
         <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
-          {/* Identifier Input */}
+          {/* Nhập tên đăng nhập */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
               <User size={20} />
@@ -80,7 +83,7 @@ export function LoginForm() {
             )}
           </div>
 
-          {/* Password Input */}
+          {/* Nhập mật khẩu */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
               <Lock size={20} />
@@ -97,8 +100,8 @@ export function LoginForm() {
             />
             <button
               type="button"
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
@@ -107,7 +110,7 @@ export function LoginForm() {
             )}
           </div>
 
-          {/* Options */}
+          {/* Các tùy chọn */}
           <div className="flex items-center justify-between text-sm px-1">
             <label className="flex items-center space-x-2 cursor-pointer">
               <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary" />
@@ -121,7 +124,7 @@ export function LoginForm() {
             </Link>
           </div>
 
-          {/* Submit Button */}
+          {/* Nút đăng nhập */}
           <div className="pt-2">
             <button
               type="submit"

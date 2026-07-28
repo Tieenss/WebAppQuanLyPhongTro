@@ -16,16 +16,28 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.identifier || !credentials.password || !apiBaseUrl) return null;
-        const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
+        const response = await fetch(`${apiBaseUrl}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ identifier: credentials.identifier, password: credentials.password }),
           cache: "no-store",
         });
-        if (!response.ok) return null;
+        
+        if (!response.ok) {
+           console.log("Login failed with status: ", response.status);
+           return null;
+        }
+        
         const payload = (await response.json()) as LoginResponse;
         if (!payload.accessToken || !payload.user?.id || !payload.user.role) return null;
-        return { id: payload.user.id, name: payload.user.name, email: payload.user.email, role: payload.user.role, phoneNumber: payload.user.phoneNumber, accessToken: payload.accessToken };
+        return { 
+          id: payload.user.id.toString(), 
+          name: payload.user.name, 
+          email: payload.user.email, 
+          role: payload.user.role, 
+          phoneNumber: payload.user.phoneNumber, 
+          accessToken: payload.accessToken 
+        };
       },
     }),
   ],
