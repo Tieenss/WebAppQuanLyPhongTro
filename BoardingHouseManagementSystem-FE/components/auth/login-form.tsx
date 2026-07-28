@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LoaderCircle, User, Lock, ArrowRight } from "lucide-react";
-import { signIn } from "next-auth/react";
+import { LoaderCircle, User, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -17,6 +18,7 @@ type LoginValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
   const form = useForm<LoginValues>({ 
     resolver: zodResolver(loginSchema), 
     defaultValues: { identifier: "", password: "" } 
@@ -29,7 +31,22 @@ export function LoginForm() {
       return; 
     }
     toast.success("Đăng nhập thành công.");
-    router.replace("/");
+    
+    // Lấy thông tin session hiện tại để kiểm tra phân quyền (role)
+    const session = await getSession();
+    const role = session?.user?.role;
+    
+    // Chuyển hướng tùy thuộc vào quyền của người dùng
+    if (role === "LANDLORD") {
+      router.replace("/landlord/management");
+    } else if (role === "ADMIN") {
+      router.replace("/admin/dashboard");
+    } else if (role === "TENANT") {
+      router.replace("/tenant/dashboard");
+    } else {
+      router.replace("/");
+    }
+    
     router.refresh();
   }
 
@@ -46,7 +63,7 @@ export function LoginForm() {
 
       <div className="w-full bg-white lg:bg-transparent lg:p-0 rounded-[2rem] shadow-xl lg:shadow-none p-8">
         <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
-          {/* Identifier Input */}
+          {/* Nhập tên đăng nhập */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
               <User size={20} />
@@ -65,27 +82,34 @@ export function LoginForm() {
             )}
           </div>
 
-          {/* Password Input */}
+          {/* Nhập mật khẩu */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
               <Lock size={20} />
             </div>
             <input
               id="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               placeholder="Mật khẩu"
-              className={`w-full pl-11 pr-4 py-4 bg-slate-50/80 border ${
+              className={`w-full pl-11 pr-12 py-4 bg-slate-50/80 border ${
                 form.formState.errors.password ? "border-red-400" : "border-slate-200"
               } rounded-2xl outline-none focus:border-primary focus:ring-1 focus:ring-primary focus:bg-white transition-all text-sm`}
               {...form.register("password")}
             />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
             {form.formState.errors.password && (
               <p className="text-xs text-red-500 mt-1 pl-2">{form.formState.errors.password.message}</p>
             )}
           </div>
 
-          {/* Options */}
+          {/* Các tùy chọn */}
           <div className="flex items-center justify-between text-sm px-1">
             <label className="flex items-center space-x-2 cursor-pointer">
               <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary" />
@@ -96,7 +120,7 @@ export function LoginForm() {
             </button>
           </div>
 
-          {/* Submit Button */}
+          {/* Nút đăng nhập */}
           <div className="pt-2">
             <button
               type="submit"

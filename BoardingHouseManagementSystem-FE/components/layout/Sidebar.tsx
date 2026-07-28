@@ -3,18 +3,49 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, MessageCircle, Settings, Bell, User, LogOut } from "lucide-react";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const role = session?.user?.role;
 
-  const navItems = [
+  // Các đường dẫn cho từng quyền
+  const landlordLinks = [
+    { href: "/landlord/dashboard", label: "Home", icon: Home },
+    { href: "/landlord/chat", label: "Chat", icon: MessageCircle },
+    { href: "/landlord/management", label: "Quản lý", icon: Settings },
+    { href: "/landlord/notifications", label: "Thông báo", icon: Bell },
+    { href: "/landlord/profile", label: "Cá nhân", icon: User },
+  ];
+
+  const tenantLinks = [
+    { href: "/tenant/dashboard", label: "Home", icon: Home },
+    { href: "/tenant/chat", label: "Chat", icon: MessageCircle },
+    { href: "/tenant/management", label: "Quản lý", icon: Settings },
+    { href: "/tenant/notifications", label: "Thông báo", icon: Bell },
+    { href: "/tenant/profile", label: "Cá nhân", icon: User },
+  ];
+  
+  const adminLinks = [
+    { href: "/admin/dashboard", label: "Home", icon: Home },
+    { href: "/admin/management", label: "Quản lý", icon: Settings },
+    { href: "/admin/profile", label: "Cá nhân", icon: User },
+  ];
+
+  const defaultLinks = [
     { href: "/", label: "Home", icon: Home },
     { href: "/chat", label: "Chat", icon: MessageCircle },
     { href: "/management", label: "Quản lý", icon: Settings },
     { href: "/notifications", label: "Thông báo", icon: Bell },
     { href: "/profile", label: "Cá nhân", icon: User },
   ];
+
+  // Lựa chọn danh sách link tương ứng
+  let navItems = defaultLinks;
+  if (role === "LANDLORD") navItems = landlordLinks;
+  else if (role === "TENANT") navItems = tenantLinks;
+  else if (role === "ADMIN") navItems = adminLinks;
 
   return (
     <div className="hidden md:flex flex-col w-64 bg-white shadow-lg h-screen fixed top-0 left-0 border-r border-slate-100 z-40">
@@ -23,7 +54,19 @@ export function Sidebar() {
       </div>
       <div className="flex-1 overflow-y-auto py-6 px-4 space-y-2">
         {navItems.map((item) => {
-          const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+          // Logic xác định link đang active
+          // So khớp chính xác hoặc nếu là menu cha thì bắt đầu bằng href (ngoại trừ Home)
+          let isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href + "/"));
+          
+          // Logic đặc biệt cho menu "Quản lý" vì các trang con không nằm trong /management/...
+          if (item.href.endsWith("/management") && !isActive) {
+            const managementPaths = ["/building", "/room", "/tenant-management", "/contract", "/invoice", "/report", "/service"];
+            const isManagementSubPage = managementPaths.some(path => pathname?.includes(path));
+            if (isManagementSubPage) {
+              isActive = true;
+            }
+          }
+
           return (
             <Link
               key={item.href}
