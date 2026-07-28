@@ -1,0 +1,55 @@
+# ========================
+# Frontend (Next.js / React)
+# ========================
+node_modules/
+.next/
+.env
+.env.local
+*.tsbuildinfo
+
+# ========================
+# Backend (Spring Boot / Maven)
+# ========================
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# ========================
+# IDEs and Editors
+# ========================
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code & Visual Studio ###
+.vscode/
+.vs/
+
+# ========================
+# OS generated files
+# ========================
+.DS_Store
+Thumbs.db
