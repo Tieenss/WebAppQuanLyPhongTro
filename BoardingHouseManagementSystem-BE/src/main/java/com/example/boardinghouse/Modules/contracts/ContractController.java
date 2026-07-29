@@ -32,7 +32,7 @@ public class ContractController {
             return ResponseEntity.ok(contractService.getAllContracts());
         } else {
             Long landlordId = Long.parseLong(userIdStr);
-            return ResponseEntity.ok(contractService.getActiveContractsByLandlordId(landlordId)); // Temporary reuse, ideally separate endpoint for all landlord's contracts
+            return ResponseEntity.ok(contractService.getActiveContractsByLandlordId(landlordId)); // Tạm thời dùng lại, lý tưởng nhất là có endpoint riêng cho tất cả hợp đồng của chủ trọ
         }
     }
 
@@ -58,6 +58,15 @@ public class ContractController {
     @PutMapping("/{id}")
     public ResponseEntity<ContractResponse> updateContract(@PathVariable Long id, @Valid @RequestBody ContractRequest request) {
         return ResponseEntity.ok(contractService.updateContract(id, request));
+    }
+
+    @PostMapping("/join/{contractCode}")
+    public ResponseEntity<ContractResponse> joinContract(@PathVariable String contractCode, Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        Long userId = Long.parseLong((String) authentication.getPrincipal());
+        return ResponseEntity.ok(contractService.joinContract(contractCode, userId));
     }
 
     @PatchMapping("/{id}/terminate")

@@ -8,7 +8,7 @@ export default function ManagementDashboardPage() {
     { href: "/landlord/building", label: "Quản lý nhà trọ", icon: Home, color: "text-red-500", bgColor: "bg-red-100", count: 0 },
     { href: "/landlord/room", label: "Quản lý phòng", icon: Building2, color: "text-blue-500", bgColor: "bg-blue-100", count: 0 },
     { href: "/landlord/tenant", label: "Quản lý người thuê", icon: Users, color: "text-blue-600", bgColor: "bg-blue-100", count: 0 },
-    { href: "/landlord/contracts", label: "Quản lý hợp đồng", icon: FileText, color: "text-orange-500", bgColor: "bg-orange-100", count: 0 },
+    { href: "/landlord/contract", label: "Quản lý hợp đồng", icon: FileText, color: "text-orange-500", bgColor: "bg-orange-100", count: 0 },
     { href: "/landlord/invoices", label: "Hoá đơn & Thanh toán", icon: ReceiptText, color: "text-blue-700", bgColor: "bg-blue-100", count: 0 },
     { href: "/landlord/issues", label: "Quản lý báo cáo sự cố", icon: AlertTriangle, color: "text-yellow-600", bgColor: "bg-yellow-100", count: 0 },
     { href: "/landlord/services", label: "Quản lý gói dịch vụ", icon: Package, color: "text-cyan-500", bgColor: "bg-cyan-100", count: 0 },
