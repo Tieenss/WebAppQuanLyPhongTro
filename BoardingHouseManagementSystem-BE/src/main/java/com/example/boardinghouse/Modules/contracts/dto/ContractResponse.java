@@ -18,8 +18,26 @@ public class ContractResponse {
     private LocalDate endDate;
     private BigDecimal deposit;
     private BigDecimal rentalPrice;
+    private BigDecimal electricityPrice;
+    private BigDecimal waterPrice;
+    private BigDecimal wifiPrice;
+    private BigDecimal parkingPrice;
+    private BigDecimal servicePrice;
+    private Integer paymentDate;
+    private String assets;
     private String contractPdfUrl;
+    private String contractCode;
+    private String terms;
     private String status;
     private Long appointmentId;
     private LocalDateTime createdAt;
+    
+    private String landlordName;
+    private String landlordCccd;
+    private String landlordCccdPlace;
+    private String landlordPhone;
+
+    private String tenantCccd;
+    private String tenantCccdPlace;
+    private String tenantPhone;
 }

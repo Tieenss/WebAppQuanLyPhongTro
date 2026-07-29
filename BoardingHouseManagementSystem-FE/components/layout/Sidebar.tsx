@@ -2,13 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, MessageCircle, Settings, Bell, User, LogOut } from "lucide-react";
+import { Home, MessageCircle, Settings, Bell, User, LogOut, FileText } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
+
+import { useWebSocket } from "@/components/providers/WebSocketProvider";
 
 export function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const role = session?.user?.role;
+  const { unreadCount } = useWebSocket();
 
   // Các đường dẫn cho từng quyền
   const landlordLinks = [
@@ -67,18 +70,27 @@ export function Sidebar() {
             }
           }
 
+          const isNotification = item.label === "Thông báo";
+
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center space-x-4 px-6 py-4 rounded-2xl transition-all duration-200 ${
+              className={`flex items-center justify-between px-6 py-4 rounded-2xl transition-all duration-200 ${
                 isActive
                   ? "bg-primary text-white shadow-md shadow-blue-200 translate-x-1"
                   : "text-slate-500 hover:bg-sky-50 hover:text-primary"
               }`}
             >
-              <item.icon size={22} className={isActive ? "animate-pulse" : ""} />
-              <span className="font-semibold text-[15px]">{item.label}</span>
+              <div className="flex items-center space-x-4">
+                <item.icon size={22} className={isActive ? "animate-pulse" : ""} />
+                <span className="font-semibold text-[15px]">{item.label}</span>
+              </div>
+              {isNotification && unreadCount > 0 && (
+                <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
             </Link>
           );
         })}
