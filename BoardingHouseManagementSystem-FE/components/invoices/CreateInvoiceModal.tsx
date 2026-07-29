@@ -6,7 +6,8 @@ import { X, ArrowRight, LoaderCircle, CheckCircle2 } from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { format } from "date-fns";
-
+import apiClient from "@/lib/apiClient";
+import { ImageUpload } from "@/app/(landlord)/landlord/tenants/_components/ImageUpload";
 type ModalProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -19,6 +20,8 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
   const [utilityRecordId, setUtilityRecordId] = useState<number | null>(null);
   const [oldUtility, setOldUtility] = useState<any>(null);
   const [isLoadingOldUtility, setIsLoadingOldUtility] = useState(false);
+  const [electricityImage, setElectricityImage] = useState("");
+  const [waterImage, setWaterImage] = useState("");
   
   // Step 1 Form
   const { register: regStep1, handleSubmit: handleStep1, control: control1, setValue: setVal1, formState: { errors: err1, isSubmitting: isSub1 } } = useForm();
@@ -56,23 +59,20 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
       const fetchOldUtility = async () => {
         setIsLoadingOldUtility(true);
         try {
-          const token = document.cookie.split('; ').find(row => row.startsWith('next-auth.session-token='))?.split('=')[1] || "";
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/utilities/room/${selectedContract?.roomId}/latest`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          if (res.ok) {
-            const data = await res.json();
-            setOldUtility(data.data);
-            if(data.data) {
-                setVal1("electricityIndex", data.data.electricityIndex);
-                setVal1("waterIndex", data.data.waterIndex);
-            } else {
-                setVal1("electricityIndex", 0);
-                setVal1("waterIndex", 0);
-            }
+          const res = await apiClient.get(`/utilities/room/${selectedContract?.roomId}/latest`);
+          const data = res.data?.data !== undefined ? res.data.data : res.data;
+          setOldUtility(data);
+          if (data) {
+              setVal1("electricityIndex", data.electricityIndex);
+              setVal1("waterIndex", data.waterIndex);
+          } else {
+              setVal1("electricityIndex", 0);
+              setVal1("waterIndex", 0);
           }
         } catch (error) {
           console.error(error);
+          setVal1("electricityIndex", 0);
+          setVal1("waterIndex", 0);
         } finally {
           setIsLoadingOldUtility(false);
         }
@@ -85,24 +85,17 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
 
   const onUtilitySubmit = async (data: any) => {
     try {
-      const token = document.cookie.split('; ').find(row => row.startsWith('next-auth.session-token='))?.split('=')[1] || "";
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/utilities`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          roomId: selectedContract?.roomId,
-          recordDate: format(new Date(), 'yyyy-MM-dd'),
-          electricityIndex: Number(data.electricityIndex),
-          waterIndex: Number(data.waterIndex)
-        })
+      const res = await apiClient.post(`/utilities`, {
+        roomId: selectedContract?.roomId,
+        recordDate: format(new Date(), 'yyyy-MM-dd'),
+        electricityIndex: Number(data.electricityIndex),
+        waterIndex: Number(data.waterIndex),
+        electricityImage,
+        waterImage
       });
 
-      if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.message || "Không thể tạo bản ghi điện nước");
-      }
-      const resData = await res.json();
-      setUtilityRecordId(resData.data.id);
+      const resData = res.data?.data || res.data;
+      setUtilityRecordId(resData.id);
       
       toast.success("Đã ghi nhận chỉ số điện nước thành công");
       setStep(2);
@@ -113,27 +106,20 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
 
   const onInvoiceSubmit = async (data: any) => {
     try {
-      const token = document.cookie.split('; ').find(row => row.startsWith('next-auth.session-token='))?.split('=')[1] || "";
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/invoices`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          contractId: selectedContract?.id,
-          utilityRecordId: utilityRecordId,
-          electricityUnitPrice: Number(data.electricityUnitPrice),
-          waterUnitPrice: Number(data.waterUnitPrice),
-          servicePrice: Number(data.servicePrice),
-          internetPrice: Number(data.internetPrice),
-          cleaningPrice: Number(data.cleaningPrice),
-          parkingPrice: Number(data.parkingPrice),
-          otherPrice: Number(data.otherPrice),
-          debtFromPreviousMonth: Number(data.debtFromPreviousMonth),
-          discount: Number(data.discount),
-          dueDate: data.dueDate
-        })
+      await apiClient.post(`/invoices`, {
+        contractId: selectedContract?.id,
+        utilityRecordId: utilityRecordId,
+        electricityUnitPrice: Number(data.electricityUnitPrice),
+        waterUnitPrice: Number(data.waterUnitPrice),
+        servicePrice: Number(data.servicePrice),
+        internetPrice: Number(data.internetPrice),
+        cleaningPrice: Number(data.cleaningPrice),
+        parkingPrice: Number(data.parkingPrice),
+        otherPrice: Number(data.otherPrice),
+        debtFromPreviousMonth: Number(data.debtFromPreviousMonth),
+        discount: Number(data.discount),
+        dueDate: data.dueDate
       });
-
-      if (!res.ok) throw new Error("Không thể lập hóa đơn");
       
       toast.success("Hóa đơn đã được phát hành thành công");
       onSuccess();
@@ -166,6 +152,8 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
           setStep(1);
           setVal1("contractId", "");
           setOldUtility(null);
+          setElectricityImage("");
+          setWaterImage("");
       }
     }}>
       <Dialog.Portal>
@@ -209,7 +197,7 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
                   <div className="space-y-3">
                     <h3 className="font-semibold text-blue-800">⚡ Điện (kWh)</h3>
                     <div>
-                      <label className="block text-xs text-slate-500 mb-1">Chỉ số cũ {oldUtility && `(Ngày ${format(new Date(oldUtility.recordDate), 'dd/MM')})`}</label>
+                      <label className="block text-xs text-slate-500 mb-1">Chỉ số cũ {oldUtility?.recordDate ? `(Ngày ${format(new Date(oldUtility.recordDate), 'dd/MM')})` : ''}</label>
                       <input type="number" readOnly value={oldUtility?.electricityIndex || 0} className="w-full border border-slate-200 rounded-lg px-3 py-2 bg-slate-100 text-slate-500 cursor-not-allowed" />
                     </div>
                     <div>
@@ -223,12 +211,16 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
                     <div className="text-sm font-medium text-emerald-600">
                       Tiêu thụ: {electricityUsage} kWh
                     </div>
+                    <div className="mt-2">
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Ảnh đồng hồ điện (Tùy chọn)</label>
+                      <ImageUpload value={electricityImage} onChange={setElectricityImage} />
+                    </div>
                   </div>
 
                   <div className="space-y-3">
                     <h3 className="font-semibold text-blue-800">💧 Nước (Khối)</h3>
                     <div>
-                      <label className="block text-xs text-slate-500 mb-1">Chỉ số cũ {oldUtility && `(Ngày ${format(new Date(oldUtility.recordDate), 'dd/MM')})`}</label>
+                      <label className="block text-xs text-slate-500 mb-1">Chỉ số cũ {oldUtility?.recordDate ? `(Ngày ${format(new Date(oldUtility.recordDate), 'dd/MM')})` : ''}</label>
                       <input type="number" readOnly value={oldUtility?.waterIndex || 0} className="w-full border border-slate-200 rounded-lg px-3 py-2 bg-slate-100 text-slate-500 cursor-not-allowed" />
                     </div>
                     <div>
@@ -241,6 +233,10 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
                     </div>
                     <div className="text-sm font-medium text-emerald-600">
                       Tiêu thụ: {waterUsage} Khối
+                    </div>
+                    <div className="mt-2">
+                      <label className="block text-xs font-medium text-slate-700 mb-1">Ảnh đồng hồ nước (Tùy chọn)</label>
+                      <ImageUpload value={waterImage} onChange={setWaterImage} />
                     </div>
                   </div>
                 </div>

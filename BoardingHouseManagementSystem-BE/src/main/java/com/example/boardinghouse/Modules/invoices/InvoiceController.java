@@ -45,4 +45,10 @@ public class InvoiceController {
         InvoiceResponse response = invoiceService.payInvoice(id, paymentImageUrl);
         return ResponseEntity.ok(ApiResponse.success(response, "Invoice paid successfully"));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteInvoice(@PathVariable Long id) {
+        invoiceService.deleteInvoice(id);
+        return ResponseEntity.ok(ApiResponse.success(null, "Invoice deleted successfully"));
+    }
 }

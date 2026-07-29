@@ -120,6 +120,13 @@ public class InvoiceService {
         return mapToResponse(savedInvoice);
     }
 
+    public void deleteInvoice(Long invoiceId) {
+        if (!invoiceRepository.existsById(invoiceId)) {
+            throw new RuntimeException("Invoice not found with ID: " + invoiceId);
+        }
+        invoiceRepository.deleteById(invoiceId);
+    }
+
     private InvoiceResponse mapToResponse(Invoice invoice) {
         return InvoiceResponse.builder()
                 .id(invoice.getId())

@@ -8,6 +8,7 @@ import com.example.boardinghouse.Modules.user.user.User;
 import com.example.boardinghouse.Modules.user.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.example.boardinghouse.security.SecurityUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -44,6 +45,11 @@ public class ContractService {
     }
 
     public List<ContractResponse> getActiveContractsByLandlordId(Long landlordId) {
+        if (SecurityUtils.isAdmin()) {
+            return contractRepository.findByStatus("active").stream()
+                    .map(this::mapToResponse)
+                    .collect(Collectors.toList());
+        }
         return contractRepository.findByRoomBuildingLandlordIdAndStatus(landlordId, "active").stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
