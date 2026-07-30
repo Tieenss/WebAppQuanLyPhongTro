@@ -12,4 +12,8 @@ public class BuildingResponse {
     private String address;
     private String imageUrl;
     private String amenities;
+    private String owner;
+    private Integer totalRooms;
+    private String status;
+    private String description;
 }

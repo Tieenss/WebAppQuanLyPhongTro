@@ -13,6 +13,9 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     // Tìm các phòng thuộc các tòa nhà của một chủ trọ cụ thể
     List<Room> findByBuildingLandlordId(Long landlordId);
 
+    boolean existsByRoomNumberAndBuildingId(String roomNumber, Long buildingId);
+    java.util.Optional<Room> findByRoomNumberAndBuildingId(String roomNumber, Long buildingId);
+
     // Tìm các phòng theo trạng thái để phục vụ bộ lọc của khách xem phòng / admin
     List<Room> findByStatus(String status);
 }

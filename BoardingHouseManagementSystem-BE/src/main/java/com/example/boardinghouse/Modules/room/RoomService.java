@@ -71,6 +71,10 @@ public class RoomService {
         Building building = buildingRepository.findById(request.getBuildingId())
                 .orElseThrow(() -> new RuntimeException("Building not found"));
 
+        if (roomRepository.existsByRoomNumberAndBuildingId(request.getRoomNumber(), request.getBuildingId())) {
+            throw new IllegalArgumentException("Tên/số phòng này đã tồn tại trong tòa nhà đã chọn");
+        }
+
         Room room = Room.builder()
                 .building(building)
                 .roomNumber(request.getRoomNumber())
@@ -92,6 +96,11 @@ public class RoomService {
     public RoomResponse updateRoom(Long id, RoomRequest request) {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Room not found"));
+
+        java.util.Optional<Room> existingRoom = roomRepository.findByRoomNumberAndBuildingId(request.getRoomNumber(), request.getBuildingId());
+        if (existingRoom.isPresent() && !existingRoom.get().getId().equals(id)) {
+            throw new IllegalArgumentException("Tên/số phòng này đã tồn tại trong tòa nhà đã chọn");
+        }
 
         if (!room.getBuilding().getId().equals(request.getBuildingId())) {
             Building building = buildingRepository.findById(request.getBuildingId())
