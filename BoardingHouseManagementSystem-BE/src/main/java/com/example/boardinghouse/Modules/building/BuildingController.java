@@ -52,18 +52,24 @@ public class BuildingController {
     }
 
     @PostMapping
-    public ResponseEntity<BuildingResponse> createBuilding(@Valid @RequestBody BuildingRequest request) {
-        BuildingResponse createdBuilding = buildingService.createBuilding(request);
-        return new ResponseEntity<>(createdBuilding, HttpStatus.CREATED);
+    public ResponseEntity<?> createBuilding(@Valid @RequestBody BuildingRequest request) {
+        try {
+            BuildingResponse createdBuilding = buildingService.createBuilding(request);
+            return new ResponseEntity<>(createdBuilding, HttpStatus.CREATED);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<BuildingResponse> updateBuilding(@PathVariable Long id, @Valid @RequestBody BuildingRequest request) {
+    public ResponseEntity<?> updateBuilding(@PathVariable Long id, @Valid @RequestBody BuildingRequest request) {
         try {
             BuildingResponse updatedBuilding = buildingService.updateBuilding(id, request);
             return ResponseEntity.ok(updatedBuilding);
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

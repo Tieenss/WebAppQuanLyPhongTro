@@ -62,6 +62,10 @@ public class ContractService {
         // Sinh mã hợp đồng (ví dụ: HD-ROOMID-TIMESTAMP)
         String code = request.getContractCode() != null ? request.getContractCode() : "HD-" + room.getRoomNumber() + "-" + System.currentTimeMillis();
 
+        if (contractRepository.existsByContractCode(code)) {
+            throw new IllegalArgumentException("Mã hợp đồng đã tồn tại");
+        }
+
         Contract contract = Contract.builder()
                 .contractCode(code)
                 .room(room)
@@ -101,6 +105,13 @@ public class ContractService {
     public ContractResponse updateContract(Long id, ContractRequest request) {
         Contract contract = contractRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Contract not found"));
+
+        if (request.getContractCode() != null) {
+            java.util.Optional<Contract> existingByCode = contractRepository.findByContractCode(request.getContractCode());
+            if (existingByCode.isPresent() && !existingByCode.get().getId().equals(id)) {
+                throw new IllegalArgumentException("Mã hợp đồng đã tồn tại");
+            }
+        }
 
         if (!contract.getRoom().getId().equals(request.getRoomId())) {
             Room room = roomRepository.findById(request.getRoomId())

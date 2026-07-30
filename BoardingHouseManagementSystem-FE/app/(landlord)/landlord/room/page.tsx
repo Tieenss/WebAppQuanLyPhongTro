@@ -59,7 +59,7 @@ export default function RoomsPage() {
         id: item.id?.toString(),
         code: item.roomNumber || "",
         name: `Phòng ${item.roomNumber || ""}`,
-        building: item.building?.name || item.building?.id || "",
+        building: item.buildingName || item.building?.name || item.building?.id || "",
         status: item.status === 'available' ? "Trống" : item.status === 'rented' ? "Đã thuê" : "Đang sửa",
         floor: 1,
         area: item.area ? `${item.area}m2` : "",
@@ -137,7 +137,7 @@ export default function RoomsPage() {
     const newRoom: Room = {
       id: newId,
       code: "P_NEW",
-      name: "Phòng mới",
+      name: "",
       building: "",
       status: "Trống",
       floor: 1,
@@ -168,7 +168,7 @@ export default function RoomsPage() {
     if (!id) return;
     if (confirm("Bạn có chắc chắn muốn xoá phòng này không?")) {
       try {
-        if (!id.startsWith("NEW_")) {
+        if (!String(id).startsWith("NEW_")) {
           await apiClient.delete(`/rooms/${id}`);
           toast.success("Xoá thành công!");
         }
@@ -186,11 +186,11 @@ export default function RoomsPage() {
 
   const handleSave = async () => {
     try {
-      const isNew = selectedId?.startsWith("NEW_");
+      const isNew = String(selectedId).startsWith("NEW_");
       let savedRoom: Room;
 
       if (isNew) {
-        // Find building ID by name since editForm.building stores the name currently
+        // Tìm ID của toà nhà bằng tên vì editForm.building hiện tại đang lưu tên
         const buildingId = buildingsList.find(b => b.name === editForm.building)?.id;
         const payload = {
           buildingId: buildingId ? parseInt(buildingId) : null,
@@ -240,14 +240,17 @@ export default function RoomsPage() {
       });
       setSelectedId(savedRoom.id || selectedId);
       setIsEditing(false);
-    } catch (error) {
-      toast.error("Có lỗi xảy ra khi lưu.");
+    } catch (error: any) {
+      const msg = error.response?.data?.message;
+      if (!msg) {
+        toast.error("Có lỗi xảy ra khi lưu.");
+      }
     }
   };
 
   const handleCancel = () => {
     setIsEditing(false);
-    if (selectedId?.startsWith("NEW_")) {
+    if (String(selectedId).startsWith("NEW_")) {
       const newRooms = rooms.filter(r => r.id !== selectedId);
       setRooms(newRooms);
       setSelectedId(newRooms.length > 0 ? newRooms[0].id || null : null);
@@ -330,7 +333,7 @@ export default function RoomsPage() {
                   value={filterStatus}
                   onChange={e => setFilterStatus(e.target.value)}
                 >
-                  <option value="Tất cả">Tất cả</option>
+                  <option value="Tất cả">Trạng thái (Tất cả)</option>
                   <option value="Trống">Trống</option>
                   <option value="Đã thuê">Đã thuê</option>
                   <option value="Đang sửa">Đang sửa</option>
@@ -408,7 +411,7 @@ export default function RoomsPage() {
               <div className="flex justify-between items-center">
                 <h2 className="text-lg font-semibold text-slate-800">Thông tin phòng chi tiết</h2>
                 <div className="flex gap-2">
-                  {!isEditing ? (
+                  {!isEditing && (
                     <>
                       <Button className="bg-yellow-500 hover:bg-yellow-600 text-white" size="sm" onClick={handleEdit}>
                         <Edit2 className="w-4 h-4 mr-2" /> Sửa
@@ -417,11 +420,6 @@ export default function RoomsPage() {
                         <Trash2 className="w-4 h-4 mr-2" /> Xoá
                       </Button>
                     </>
-                  ) : (
-                    <>
-                      <Button variant="outline" size="sm" onClick={handleCancel}>Hủy</Button>
-                      <Button size="sm" onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">Lưu</Button>
-                    </>
                   )}
                 </div>
               </div>
@@ -429,16 +427,25 @@ export default function RoomsPage() {
               {/* Phần Hình Ảnh */}
               <div
                 className="relative aspect-video rounded-xl overflow-hidden bg-slate-100 cursor-zoom-in group"
-                onClick={() => setZoomedImage(selectedRoom.imageUrl)}
+                onClick={() => selectedRoom.imageUrl && setZoomedImage(selectedRoom.imageUrl)}
               >
-                <img
-                  src={selectedRoom.imageUrl}
-                  alt={selectedRoom.name}
-                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                  <Maximize2 className="text-white opacity-0 group-hover:opacity-100 w-8 h-8 drop-shadow-md" />
-                </div>
+                {selectedRoom.imageUrl ? (
+                  <>
+                    <img
+                      src={selectedRoom.imageUrl}
+                      alt={selectedRoom.name}
+                      className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                      <Maximize2 className="text-white opacity-0 group-hover:opacity-100 w-8 h-8 drop-shadow-md" />
+                    </div>
+                  </>
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                    <ImageIcon className="w-8 h-8 mb-2 opacity-50" />
+                    <span className="text-sm">Chưa có ảnh</span>
+                  </div>
+                )}
               </div>
 
               {/* Phần Biểu Mẫu */}
@@ -448,7 +455,7 @@ export default function RoomsPage() {
                     <Label htmlFor="code">Mã phòng</Label>
                     <Input
                       id="code"
-                      value={isEditing ? editForm.code : selectedRoom.code}
+                      value={isEditing ? (editForm.code || "") : (selectedRoom.code || "")}
                       onChange={e => setEditForm({ ...editForm, code: e.target.value })}
                       readOnly={!isEditing}
                       className={!isEditing ? "bg-slate-50 focus-visible:ring-0" : ""}
@@ -458,7 +465,8 @@ export default function RoomsPage() {
                     <Label htmlFor="name">Tên phòng</Label>
                     <Input
                       id="name"
-                      value={isEditing ? editForm.name : selectedRoom.name}
+                      placeholder="Nhập tên phòng..."
+                      value={isEditing ? (editForm.name || "") : (selectedRoom.name || "")}
                       onChange={e => setEditForm({ ...editForm, name: e.target.value })}
                       readOnly={!isEditing}
                       className={!isEditing ? "bg-slate-50 focus-visible:ring-0" : ""}
@@ -470,7 +478,7 @@ export default function RoomsPage() {
                   <Label htmlFor="building">Tòa nhà</Label>
                   <select
                     id="building"
-                    value={isEditing ? editForm.building : selectedRoom.building}
+                    value={isEditing ? (editForm.building || "") : (selectedRoom.building || "")}
                     onChange={e => setEditForm({ ...editForm, building: e.target.value })}
                     disabled={!isEditing}
                     className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-50"
@@ -513,7 +521,7 @@ export default function RoomsPage() {
                     <Label htmlFor="area">Diện tích</Label>
                     <Input
                       id="area"
-                      value={isEditing ? editForm.area : selectedRoom.area}
+                      value={isEditing ? (editForm.area || "") : (selectedRoom.area || "")}
                       onChange={e => setEditForm({ ...editForm, area: e.target.value })}
                       readOnly={!isEditing}
                       className={!isEditing ? "bg-slate-50 focus-visible:ring-0" : ""}
@@ -576,7 +584,7 @@ export default function RoomsPage() {
                   <textarea
                     id="desc"
                     className={`flex min-h-[80px] w-full rounded-md border border-slate-200 px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 ${!isEditing ? 'bg-slate-50 text-slate-500 focus-visible:ring-0' : 'bg-white'}`}
-                    value={isEditing ? editForm.description : selectedRoom.description}
+                    value={isEditing ? (editForm.description || "") : (selectedRoom.description || "")}
                     onChange={e => setEditForm({ ...editForm, description: e.target.value })}
                     readOnly={!isEditing}
                   />
@@ -663,6 +671,14 @@ export default function RoomsPage() {
                 </div>
 
               </div>
+
+              {/* Cụm nút thao tác ở dưới cùng */}
+              {isEditing && (
+                <div className="flex gap-2 justify-end mt-4 pt-4 border-t border-slate-100">
+                  <Button variant="outline" size="sm" onClick={handleCancel}>Hủy</Button>
+                  <Button size="sm" onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">Lưu</Button>
+                </div>
+              )}
 
             </div>
           ) : (

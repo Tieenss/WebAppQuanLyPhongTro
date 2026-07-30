@@ -9,5 +9,6 @@ import java.util.Optional;
 @Repository
 public interface ContractRepository extends JpaRepository<Contract, Long> {
     Optional<Contract> findByContractCode(String contractCode);
+    boolean existsByContractCode(String contractCode);
     List<Contract> findByRoomBuildingLandlordIdAndStatus(Long landlordId, String status);
 }
