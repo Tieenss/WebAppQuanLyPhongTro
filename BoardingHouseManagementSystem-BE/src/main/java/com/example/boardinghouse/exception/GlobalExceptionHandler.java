@@ -1,4 +1,4 @@
-package com.example.boardinghouse.Exception;
+package com.example.boardinghouse.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -24,7 +24,7 @@ public class TenantService {
     @Transactional(readOnly = true)
     public List<TenantResponse> getTenants() {
         Long landlordId = SecurityUtils.getCurrentUserId();
-        List<User> users = userRepository.findByLandlordIdAndRole(landlordId, "tenant");
+        List<User> users = userRepository.findByLandlordIdAndRole(landlordId, "TENANT");
         
         return users.stream().map(this::mapToResponse).collect(Collectors.toList());
     }
@@ -48,7 +48,7 @@ public class TenantService {
                 .password("123456") // Default password for tenant
                 .email(request.getEmail())
                 .avatarUrl(request.getAvatarUrl())
-                .role("tenant")
+                .role("TENANT")
                 .landlord(userRepository.findById(landlordId).orElseThrow(() -> new RuntimeException("Landlord not found")))
                 // In reality, might need username/password for tenants to login, but setting defaults or nulls for now
                 .build();

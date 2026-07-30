@@ -10,12 +10,12 @@ async function getAvailableRooms(): Promise<Room[]> {
     const res = await fetch(`${apiUrl}/api/rooms/status/available`, {
       cache: "no-store", // We want fresh data for available rooms
     });
-    
+
     if (!res.ok) {
       // Backend returned error (e.g., 404, 500)
       return [];
     }
-    
+
     return await res.json();
   } catch (error) {
     // Backend is down or fetch failed
@@ -48,7 +48,7 @@ export default async function HomePage() {
           </Link>
         </div>
       </header>
-      
+
       <GuestContent initialRooms={rooms} />
     </div>
   );

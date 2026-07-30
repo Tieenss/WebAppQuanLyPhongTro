@@ -26,7 +26,7 @@ public class Issue {
     private Room room;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", nullable = false)
+    @JoinColumn(name = "tenant_id", nullable = true)
     private User tenant;
 
     @Column(name = "issue_type", nullable = false, length = 50)

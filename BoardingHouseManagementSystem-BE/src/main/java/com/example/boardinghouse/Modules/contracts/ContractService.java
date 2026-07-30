@@ -197,7 +197,7 @@ public class ContractService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if ("guest".equals(user.getRole())) {
-            user.setRole("tenant");
+            user.setRole("TENANT");
         }
 
         Room room = contract.getRoom();

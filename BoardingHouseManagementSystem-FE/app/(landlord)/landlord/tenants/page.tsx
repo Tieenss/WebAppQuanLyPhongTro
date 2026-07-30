@@ -1,15 +1,17 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Plus, Search, Users } from "lucide-react";
+import { Plus, Search, Users, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TenantTable } from "./_components/TenantTable";
 import { TenantModal } from "./_components/TenantModal";
 import { DeleteConfirmDialog } from "./_components/DeleteConfirmDialog";
+import { QuickContractModal } from "./_components/QuickContractModal";
 import { Tenant } from "./types";
 import apiClient from "@/lib/apiClient";
 import { toast } from "sonner";
+import Link from "next/link";
 
 export default function TenantsPage() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -20,6 +22,8 @@ export default function TenantsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
+  const [isContractModalOpen, setIsContractModalOpen] = useState(false);
+  const [contractTenant, setContractTenant] = useState<Tenant | null>(null);
 
   const fetchTenants = async () => {
     setIsLoading(true);
@@ -70,12 +74,17 @@ export default function TenantsPage() {
     <div className="p-6 max-w-7xl mx-auto space-y-8">
       {/* Header section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
-            <Users className="w-8 h-8 text-blue-600" />
-            Quản lý Khách thuê
-          </h1>
-          <p className="text-slate-500 mt-1">Quản lý thông tin liên hệ và giấy tờ của tất cả khách thuê trong hệ thống.</p>
+        <div className="flex items-center gap-4">
+          <Link href="/landlord/dashboard" className="text-slate-400 hover:text-blue-600 transition-colors p-2 hover:bg-slate-50 rounded-full shrink-0">
+            <ArrowLeft className="w-6 h-6" />
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
+              <Users className="w-8 h-8 text-blue-600" />
+              Quản lý Khách thuê
+            </h1>
+            <p className="text-slate-500 mt-1">Quản lý thông tin liên hệ và giấy tờ của tất cả khách thuê trong hệ thống.</p>
+          </div>
         </div>
         
         <Button onClick={handleAddClick} className="bg-blue-600 hover:bg-blue-700 h-11 px-6 shadow-sm shrink-0">
@@ -123,13 +132,26 @@ export default function TenantsPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         tenant={selectedTenant}
-        onSuccess={fetchTenants}
+        onSuccess={(savedTenant, openContract) => {
+          fetchTenants();
+          if (openContract && savedTenant) {
+            setContractTenant(savedTenant);
+            setIsContractModalOpen(true);
+          }
+        }}
       />
       
       <DeleteConfirmDialog
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
         tenant={selectedTenant}
+        onSuccess={fetchTenants}
+      />
+
+      <QuickContractModal
+        isOpen={isContractModalOpen}
+        onClose={() => setIsContractModalOpen(false)}
+        tenant={contractTenant}
         onSuccess={fetchTenants}
       />
     </div>

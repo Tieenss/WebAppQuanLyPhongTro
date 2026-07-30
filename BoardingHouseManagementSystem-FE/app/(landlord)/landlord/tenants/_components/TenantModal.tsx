@@ -36,11 +36,12 @@ interface TenantModalProps {
   isOpen: boolean;
   onClose: () => void;
   tenant: Tenant | null;
-  onSuccess: () => void;
+  onSuccess: (savedTenant?: Tenant, openContract?: boolean) => void;
 }
 
 export function TenantModal({ isOpen, onClose, tenant, onSuccess }: TenantModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitAction, setSubmitAction] = useState<"save" | "save_and_contract">("save");
 
   const {
     register,
@@ -97,14 +98,17 @@ export function TenantModal({ isOpen, onClose, tenant, onSuccess }: TenantModalP
         cccdNumber: data.cccdNumber || "", // Use empty string to prevent DB null constraint violation
       };
 
+      let savedTenantData = tenant;
       if (tenant) {
-        await apiClient.put(`/tenants/${tenant.id}`, payload);
+        const res = await apiClient.put(`/tenants/${tenant.id}`, payload);
+        savedTenantData = res.data;
         toast.success("Cập nhật thông tin khách thuê thành công");
       } else {
-        await apiClient.post("/tenants", payload);
+        const res = await apiClient.post("/tenants", payload);
+        savedTenantData = res.data;
         toast.success("Thêm khách thuê thành công");
       }
-      onSuccess();
+      onSuccess(savedTenantData || undefined, submitAction === "save_and_contract");
       onClose();
     } catch (error: any) {
       console.error("Lỗi khi lưu khách thuê:", error);
@@ -222,7 +226,20 @@ export function TenantModal({ isOpen, onClose, tenant, onSuccess }: TenantModalP
             <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               Hủy bỏ
             </Button>
-            <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700">
+            <Button 
+              type="submit" 
+              disabled={isSubmitting} 
+              className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              onClick={() => setSubmitAction("save_and_contract")}
+            >
+              Lưu & Tạo hợp đồng
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting} 
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={() => setSubmitAction("save")}
+            >
               {isSubmitting ? "Đang lưu..." : tenant ? "Cập nhật" : "Thêm mới"}
             </Button>
           </DialogFooter>
