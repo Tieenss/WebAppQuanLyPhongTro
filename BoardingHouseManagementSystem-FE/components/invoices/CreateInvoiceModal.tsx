@@ -22,6 +22,7 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
   const [isLoadingOldUtility, setIsLoadingOldUtility] = useState(false);
   const [electricityImage, setElectricityImage] = useState("");
   const [waterImage, setWaterImage] = useState("");
+  const [bankAccounts, setBankAccounts] = useState<any[]>([]);
   
   // Step 1 Form
   const { register: regStep1, handleSubmit: handleStep1, control: control1, setValue: setVal1, formState: { errors: err1, isSubmitting: isSub1 } } = useForm();
@@ -38,6 +39,7 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
       otherPrice: 0,
       debtFromPreviousMonth: 0,
       discount: 0,
+      bankAccountId: "",
       dueDate: format(new Date(new Date().setDate(new Date().getDate() + 5)), 'yyyy-MM-dd')
     }
   });
@@ -83,6 +85,29 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
     }
   }, [selectedContractId, selectedContract]);
 
+  useEffect(() => {
+    if (isOpen) {
+      const fetchBankAccounts = async () => {
+        try {
+          const res = await apiClient.get('/bank-accounts');
+          const data = res.data?.data !== undefined ? res.data.data : res.data;
+          setBankAccounts(data || []);
+          if (data && data.length > 0) {
+            const defaultBank = data.find((b: any) => b.isDefault);
+            if (defaultBank) {
+              regStep2("bankAccountId").onChange({ target: { name: "bankAccountId", value: defaultBank.id }});
+            } else {
+              regStep2("bankAccountId").onChange({ target: { name: "bankAccountId", value: data[0].id }});
+            }
+          }
+        } catch (error) {
+          console.error("Failed to fetch bank accounts:", error);
+        }
+      };
+      fetchBankAccounts();
+    }
+  }, [isOpen]);
+
   const onUtilitySubmit = async (data: any) => {
     try {
       const res = await apiClient.post(`/utilities`, {
@@ -118,6 +143,7 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
         otherPrice: Number(data.otherPrice),
         debtFromPreviousMonth: Number(data.debtFromPreviousMonth),
         discount: Number(data.discount),
+        bankAccountId: data.bankAccountId ? Number(data.bankAccountId) : null,
         dueDate: data.dueDate
       });
       
@@ -213,7 +239,7 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
                     </div>
                     <div className="mt-2">
                       <label className="block text-xs font-medium text-slate-700 mb-1">Ảnh đồng hồ điện (Tùy chọn)</label>
-                      <ImageUpload value={electricityImage} onChange={setElectricityImage} />
+                      <ImageUpload value={electricityImage} onChange={setElectricityImage} onRemove={() => setElectricityImage("")} />
                     </div>
                   </div>
 
@@ -236,7 +262,7 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
                     </div>
                     <div className="mt-2">
                       <label className="block text-xs font-medium text-slate-700 mb-1">Ảnh đồng hồ nước (Tùy chọn)</label>
-                      <ImageUpload value={waterImage} onChange={setWaterImage} />
+                      <ImageUpload value={waterImage} onChange={setWaterImage} onRemove={() => setWaterImage("")} />
                     </div>
                   </div>
                 </div>
@@ -296,6 +322,21 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
                 <div>
                   <label className="block text-xs font-medium text-emerald-600 mb-1">Giảm giá (Trừ đi)</label>
                   <input type="number" className="w-full border border-emerald-200 bg-emerald-50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 outline-none text-emerald-700" {...regStep2("discount")} />
+                </div>
+                
+                <div className="col-span-2 mt-2 pt-4 border-t border-slate-200">
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Tài khoản nhận tiền (VietQR)</label>
+                  <select 
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                    {...regStep2("bankAccountId")}
+                  >
+                    <option value="">-- Chọn tài khoản ngân hàng --</option>
+                    {bankAccounts.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.bankName} {b.bankCode ? `(${b.bankCode})` : ''} - {b.accountNumber} - {b.accountHolder} {b.isDefault ? '(Mặc định)' : ''}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

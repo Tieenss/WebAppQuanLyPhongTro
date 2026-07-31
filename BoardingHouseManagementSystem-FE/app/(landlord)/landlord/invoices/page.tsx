@@ -7,45 +7,28 @@ import { ViewInvoiceModal } from "@/components/invoices/ViewInvoiceModal";
 import Link from "next/link";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import apiClient from "@/lib/apiClient";
+import apiClient, { fetcher } from "@/lib/apiClient";
+import useSWR, { useSWRConfig } from "swr";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 
 export default function InvoicesPage() {
-  const [invoices, setInvoices] = useState<any[]>([]);
-  const [contracts, setContracts] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewInvoice, setViewInvoice] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const fetchData = async () => {
-    try {
-      const [invRes, contractsRes] = await Promise.all([
-        apiClient.get('/invoices'),
-        apiClient.get('/contracts/active')
-      ]);
-
-      const invData = Array.isArray(invRes.data) ? invRes.data : (invRes.data?.data || []);
-      const contractsData = Array.isArray(contractsRes.data) ? contractsRes.data : (contractsRes.data?.data || []);
-
-      setInvoices(invData);
-      setContracts(contractsData);
-    } catch (error) {
-      console.error("Failed to fetch data", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const { data: swrInvoices, isLoading: isLoadingInvoices } = useSWR('/invoices', fetcher);
+  const { data: swrContracts, isLoading: isLoadingContracts } = useSWR('/contracts/active', fetcher);
+  const { mutate } = useSWRConfig();
+  
+  const invoices = swrInvoices ? (Array.isArray(swrInvoices) ? swrInvoices : (swrInvoices.data || [])) : [];
+  const contracts = swrContracts ? (Array.isArray(swrContracts) ? swrContracts : (swrContracts.data || [])) : [];
+  const isLoading = isLoadingInvoices || isLoadingContracts;
 
   const handlePayInvoice = async (id: number) => {
     try {
       await apiClient.put(`/invoices/${id}/pay`, { paymentImageUrl: "" });
       toast.success("Đã xác nhận thu tiền thành công!");
-      fetchData();
+      mutate('/invoices');
     } catch (error) {
       toast.error("Không thể xác nhận thu tiền.");
     }
@@ -56,14 +39,14 @@ export default function InvoicesPage() {
       try {
         await apiClient.delete(`/invoices/${id}`);
         toast.success("Đã xóa hóa đơn thành công!");
-        fetchData();
+        mutate('/invoices');
       } catch (error) {
         toast.error("Không thể xóa hóa đơn.");
       }
     }
   };
 
-  const filteredInvoices = invoices.filter(inv => 
+  const filteredInvoices = invoices.filter((inv: any) => 
     inv.invoiceCode?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -248,9 +231,9 @@ export default function InvoicesPage() {
 
       <CreateInvoiceModal 
         isOpen={isModalOpen} 
-        onOpenChange={setIsModalOpen} 
+        onClose={() => setIsModalOpen(false)}
         contracts={contracts}
-        onSuccess={fetchData}
+        onSuccess={() => mutate('/invoices')}
       />
       <ViewInvoiceModal 
         isOpen={!!viewInvoice} 

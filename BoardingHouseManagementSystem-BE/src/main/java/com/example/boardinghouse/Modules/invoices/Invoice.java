@@ -33,6 +33,9 @@ public class Invoice {
     @Column(name = "utility_record_id", nullable = false)
     private Long utilityRecordId;
 
+    @Column(name = "bank_account_id")
+    private Long bankAccountId;
+
     @Column(name = "invoice_code", nullable = false, length = 100)
     private String invoiceCode;
 

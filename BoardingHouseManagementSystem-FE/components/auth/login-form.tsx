@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoaderCircle, User, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { signIn, getSession } from "next-auth/react";
@@ -19,12 +19,28 @@ type LoginValues = z.infer<typeof loginSchema>;
 export function LoginForm() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  
   const form = useForm<LoginValues>({ 
     resolver: zodResolver(loginSchema), 
     defaultValues: { identifier: "", password: "" } 
   });
 
+  useEffect(() => {
+    const savedIdentifier = localStorage.getItem("remembered_identifier");
+    if (savedIdentifier) {
+      form.setValue("identifier", savedIdentifier);
+      setRememberMe(true);
+    }
+  }, [form]);
+
   async function onSubmit(values: LoginValues) {
+    if (rememberMe) {
+      localStorage.setItem("remembered_identifier", values.identifier);
+    } else {
+      localStorage.removeItem("remembered_identifier");
+    }
+
     const result = await signIn("credentials", { ...values, redirect: false });
     if (result?.error) { 
       toast.error("Tài khoản hoặc mật khẩu không đúng."); 
@@ -38,7 +54,7 @@ export function LoginForm() {
     
     // Chuyển hướng tùy thuộc vào quyền của người dùng
     if (role === "LANDLORD") {
-      router.replace("/landlord/management");
+      router.replace("/landlord/dashboard");
     } else if (role === "ADMIN") {
       router.replace("/admin/dashboard");
     } else if (role === "TENANT") {
@@ -112,7 +128,12 @@ export function LoginForm() {
           {/* Các tùy chọn */}
           <div className="flex items-center justify-between text-sm px-1">
             <label className="flex items-center space-x-2 cursor-pointer">
-              <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary" />
+              <input 
+                type="checkbox" 
+                className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary" 
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
               <span className="text-slate-600 font-medium">Ghi nhớ đăng nhập</span>
             </label>
             <Link

@@ -3,66 +3,36 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Building2, Home, Users, FileText, ReceiptText, AlertTriangle, Package } from "lucide-react";
-import apiClient from "@/lib/apiClient";
+import useSWR from "swr";
+import { fetcher } from "@/lib/apiClient";
 import { useSession } from "next-auth/react";
 
 export default function ManagementDashboardPage() {
   const { data: session } = useSession();
-  const userName = session?.user?.name || session?.user?.fullName || session?.user?.username || "bạn";
+  const userName = session?.user?.name || (session?.user as any)?.fullName || (session?.user as any)?.username || "bạn";
   const userRole = session?.user?.role === "LANDLORD" ? "Chủ trọ" : session?.user?.role === "ADMIN" ? "Quản trị viên" : "Người dùng";
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [managedBuildings, setManagedBuildings] = useState<{ id: number, name: string }[]>([]);
-  const [counts, setCounts] = useState({
-    buildings: 0,
-    rooms: 0,
-    tenants: 0,
-    contracts: 0,
-    invoices: 0,
-    issues: 0,
-    services: 0,
-  });
 
-  useEffect(() => {
-    const fetchCounts = async () => {
-      try {
-        const [
-          buildingsRes,
-          roomsRes,
-          tenantsRes,
-          contractsRes,
-          invoicesRes,
-          issuesRes,
-          servicesRes
-        ] = await Promise.all([
-          apiClient.get("/buildings"),
-          apiClient.get("/rooms"),
-          apiClient.get("/tenants"),
-          apiClient.get("/contracts"),
-          apiClient.get("/invoices"),
-          apiClient.get("/su-co"),
-          apiClient.get("/subscriptions") // Replace with actual endpoint if different
-        ].map(p => p.catch(() => ({ data: [] })))); // catch errors so one failure doesn't block others
+  const { data: buildingsRes } = useSWR("/buildings", fetcher);
+  const { data: roomsRes } = useSWR("/rooms", fetcher);
+  const { data: tenantsRes } = useSWR("/tenants", fetcher);
+  const { data: contractsRes } = useSWR("/contracts", fetcher);
+  const { data: invoicesRes } = useSWR("/invoices", fetcher);
+  const { data: issuesRes } = useSWR("/su-co", fetcher);
+  const { data: servicesRes } = useSWR("/subscriptions", fetcher);
 
-        const buildingsData = buildingsRes.data?.data || buildingsRes.data || [];
-        setManagedBuildings(buildingsData);
-
-        setCounts({
-          buildings: buildingsData.length,
-          rooms: (roomsRes.data?.data || roomsRes.data || []).length,
-          tenants: (tenantsRes.data?.data || tenantsRes.data || []).length,
-          contracts: (contractsRes.data?.data || contractsRes.data || []).length,
-          invoices: (invoicesRes.data?.data || invoicesRes.data || []).length,
-          issues: (issuesRes.data?.data || issuesRes.data || []).length,
-          services: (servicesRes.data?.data || servicesRes.data || []).length,
-        });
-      } catch (error) {
-        console.error("Lỗi khi tải số liệu:", error);
-      }
-    };
-
-    fetchCounts();
-  }, []);
+  const managedBuildings = buildingsRes || [];
+  
+  const counts = useMemo(() => ({
+    buildings: managedBuildings.length,
+    rooms: (roomsRes || []).length,
+    tenants: (tenantsRes || []).length,
+    contracts: (contractsRes || []).length,
+    invoices: (invoicesRes || []).length,
+    issues: (issuesRes || []).length,
+    services: (servicesRes || []).length,
+  }), [managedBuildings, roomsRes, tenantsRes, contractsRes, invoicesRes, issuesRes, servicesRes]);
 
   const cards = [
     { href: "/landlord/building", label: "Quản lý nhà trọ", icon: Home, color: "text-indigo-500", bgColor: "bg-indigo-100", count: counts.buildings },

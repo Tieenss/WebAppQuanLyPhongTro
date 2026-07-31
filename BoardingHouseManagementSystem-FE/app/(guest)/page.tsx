@@ -23,7 +23,19 @@ async function getAvailableRooms(): Promise<Room[]> {
   }
 }
 
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
+
 export default async function HomePage() {
+  const session = await getServerSession(authOptions);
+  
+  if (session?.user?.role) {
+    if (session.user.role === "LANDLORD") redirect("/landlord/dashboard");
+    if (session.user.role === "ADMIN") redirect("/admin/dashboard");
+    if (session.user.role === "TENANT") redirect("/tenant/dashboard");
+  }
+
   const rooms = await getAvailableRooms();
 
   return (

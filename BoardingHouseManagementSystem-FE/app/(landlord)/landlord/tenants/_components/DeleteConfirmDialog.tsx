@@ -66,7 +66,7 @@ export function DeleteConfirmDialog({
           </Button>
           <Button
             type="button"
-            variant="destructive"
+            variant="default"
             onClick={handleDelete}
             disabled={isDeleting}
             className="bg-red-600 hover:bg-red-700 text-white"

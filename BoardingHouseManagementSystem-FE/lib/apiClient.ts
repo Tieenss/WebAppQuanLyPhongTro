@@ -1,5 +1,3 @@
-"use client";
-
 import axios, { type AxiosError } from "axios";
 import { getSession, signOut } from "next-auth/react";
 import { toast } from "sonner";
@@ -33,5 +31,7 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
+export const fetcher = (url: string) => apiClient.get(url).then(res => res.data?.data !== undefined ? res.data.data : res.data);
 
 export default apiClient;

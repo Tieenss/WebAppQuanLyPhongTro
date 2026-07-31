@@ -52,7 +52,7 @@ export function OverviewChart({ invoices }: { invoices: any[] }) {
         <Tooltip 
           cursor={{ fill: '#f1f5f9' }}
           contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-          formatter={(value: number) => [`${new Intl.NumberFormat("vi-VN").format(value)} đ`, "Doanh thu"]}
+          formatter={(value: any) => [`${new Intl.NumberFormat("vi-VN").format(value || 0)} đ`, "Doanh thu"]}
         />
         <Bar dataKey="total" fill="#2563eb" radius={[4, 4, 0, 0]} maxBarSize={50} />
       </BarChart>

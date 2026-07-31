@@ -9,6 +9,9 @@ import java.time.LocalDate;
 public class InvoiceCreateRequest {
     private Long contractId;
     private Long utilityRecordId;
+    private Long bankAccountId;
+    
+    private BigDecimal roomPrice;
     
     // Đơn giá / số điện
     private BigDecimal electricityUnitPrice;

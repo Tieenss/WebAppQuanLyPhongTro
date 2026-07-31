@@ -28,8 +28,8 @@ export function DashboardSidebar({ role = "LANDLORD", isAdmin = false }: { role?
   const links = role === "TENANT" ? tenantLinks : landlordLinks;
   
   return (
-    <aside className="border-b bg-white md:min-h-screen md:w-64 md:border-b-0 md:border-r flex flex-col">
-      <div className="flex h-16 items-center gap-2 px-4 font-bold text-xl text-blue-600">Thuê Trọ</div>
+    <aside className="border-b bg-white md:min-h-screen md:w-64 md:border-b-0 flex flex-col shadow-[1px_0_15px_-5px_rgba(0,0,0,0.05)] z-10 relative">
+      <div className="flex h-16 items-center gap-2 px-6 font-extrabold text-xl text-blue-600 tracking-tight">Thuê Trọ</div>
       <nav className="flex-1 flex gap-1 overflow-x-auto px-3 pb-3 md:flex-col md:py-3 space-y-1">
         {links.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || pathname?.startsWith(href + "/");

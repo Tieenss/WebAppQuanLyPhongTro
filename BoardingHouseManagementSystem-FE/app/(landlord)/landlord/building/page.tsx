@@ -57,7 +57,7 @@ export default function BuildingsPage() {
           : []
       }));
 
-      const sorted = [...data].sort((a: Building, b: Building) => {
+      const sorted = [...data].sort((a: any, b: any) => {
         const nameA = a.name || a.buildingName || "";
         const nameB = b.name || b.buildingName || "";
         return nameA.localeCompare(nameB);
@@ -210,24 +210,31 @@ export default function BuildingsPage() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] md:h-screen -m-4 sm:-m-6">
-      <PanelGroup direction="horizontal" className="flex-1 flex overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-4rem)] md:h-[calc(100vh-6rem)]">
+      {/* Header section */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex items-start sm:items-center gap-3">
+          <Link href="/landlord/management" className="text-slate-400 hover:text-blue-600 transition-colors mt-1 sm:mt-0">
+            <ArrowLeft className="w-6 h-6" />
+          </Link>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Quản lý Nhà trọ</h1>
+            <p className="mt-1 text-sm text-slate-500">Quản lý thông tin chung, địa chỉ và tiện nghi của các tòa nhà / khu trọ.</p>
+          </div>
+        </div>
+        <button onClick={handleAdd} className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 shrink-0">
+          <Plus className="w-5 h-5" />
+          <span>Thêm nhà trọ</span>
+        </button>
+      </div>
+
+      <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <PanelGroup direction="horizontal" className="w-full h-full flex">
         
-        {/* CỘT TRÁI: DANH SÁCH */}
-        <Panel defaultSize={65} minSize={30} className="w-full md:w-2/3 flex flex-col border-r bg-slate-50/50">
-          <div className="p-4 md:p-6 border-b bg-white">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-              <div className="flex items-center gap-3">
-                <Link href="/landlord/management" className="text-slate-400 hover:text-blue-600 transition-colors">
-                  <ArrowLeft className="w-6 h-6" />
-                </Link>
-                <h1 className="text-2xl font-bold text-slate-800">Quản lý nhà trọ</h1>
-              </div>
-              <Button onClick={handleAdd} className="bg-blue-600 hover:bg-blue-700">
-                <Plus className="w-4 h-4 mr-2" /> Thêm nhà trọ
-              </Button>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3">
+          {/* CỘT TRÁI: DANH SÁCH */}
+          <Panel defaultSize={65} minSize={30} className="w-full md:w-2/3 flex flex-col border-r border-slate-100 bg-slate-50/30">
+            <div className="p-4 md:p-5 border-b border-slate-100 bg-white">
+              <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input 
@@ -473,7 +480,8 @@ export default function BuildingsPage() {
             </div>
           )}
         </Panel>
-      </PanelGroup>
+        </PanelGroup>
+      </div>
 
       {/* LIGHTBOX ĐỂ PHÓNG TO ẢNH */}
       {zoomedImage && (

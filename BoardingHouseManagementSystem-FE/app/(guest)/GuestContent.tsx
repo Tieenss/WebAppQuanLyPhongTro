@@ -27,11 +27,10 @@ export function GuestContent({ initialRooms }: GuestContentProps) {
     const matchTab = activeFilter === "Tất cả" || 
       (room.buildingName && room.buildingName.toLowerCase().includes(activeFilter.toLowerCase()));
       
-    // Lọc theo từ khóa tìm kiếm (tên tòa nhà, địa chỉ, hoặc số phòng)
+    // Lọc theo từ khóa tìm kiếm (tên tòa nhà hoặc số phòng)
     const matchSearch = !searchQuery || 
       (room.buildingName && room.buildingName.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (room.roomNumber && room.roomNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (room.address && room.address.toLowerCase().includes(searchQuery.toLowerCase()));
+      (room.roomNumber && room.roomNumber.toLowerCase().includes(searchQuery.toLowerCase()));
       
     return matchTab && matchSearch;
   });

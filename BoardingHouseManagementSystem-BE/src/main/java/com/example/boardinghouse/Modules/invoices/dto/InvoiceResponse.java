@@ -14,6 +14,11 @@ public class InvoiceResponse {
     private Long id;
     private Long contractId;
     private Long utilityRecordId;
+    private Long bankAccountId;
+    private String bankName;
+    private String bankCode;
+    private String bankAccountNumber;
+    private String bankAccountHolder;
     private String invoiceCode;
     private BigDecimal roomPrice;
     private BigDecimal electricityPrice;

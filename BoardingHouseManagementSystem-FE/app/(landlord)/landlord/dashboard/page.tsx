@@ -1,71 +1,55 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OverviewChart } from "@/components/dashboard/OverviewChart";
-import { Users, DoorOpen, Receipt, FileWarning } from "lucide-react";
+import { Users, DoorOpen, Receipt, FileWarning, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import useSWR from "swr";
+import { fetcher } from "@/lib/apiClient";
 
-async function fetchDashboardData() {
-  const session = await getServerSession(authOptions);
-  const token = session?.accessToken || "";
-  const headers = {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
+export default function LandlordDashboardPage() { 
+  const { data: roomsRes, isLoading: isLoadingRooms } = useSWR("/rooms", fetcher);
+  const { data: tenantsRes, isLoading: isLoadingTenants } = useSWR("/tenants", fetcher);
+  const { data: invoicesRes, isLoading: isLoadingInvoices } = useSWR("/invoices", fetcher);
+  const { data: issuesRes, isLoading: isLoadingIssues } = useSWR("/su-co", fetcher);
+  const { data: activitiesRes, isLoading: isLoadingActivities } = useSWR("/activities/recent?limit=5", fetcher);
+
+  const rooms = roomsRes || [];
+  const tenants = tenantsRes || [];
+  const invoices = invoicesRes || [];
+  const issues = issuesRes || [];
+  const activities = activitiesRes || [];
+
+  const rentedRoomsCount = rooms.filter((r: any) => r.status === "RENTED").length;
+  const unpaidInvoicesCount = invoices.filter((i: any) => i.status === "UNPAID" || i.status === "PENDING").length;
+  const pendingIssuesCount = issues.filter((i: any) => i.status === "PENDING" || i.status === "OPEN").length;
+
+  const data = {
+    rentedRoomsCount,
+    tenantsCount: tenants.length,
+    unpaidInvoicesCount,
+    pendingIssuesCount,
+    invoices,
+    activities
   };
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-  
-  try {
-    const [roomsRes, tenantsRes, invoicesRes, issuesRes, activitiesRes] = await Promise.all([
-      fetch(`${apiUrl}/api/rooms`, { headers, cache: "no-store" }),
-      fetch(`${apiUrl}/api/tenants`, { headers, cache: "no-store" }),
-      fetch(`${apiUrl}/api/invoices`, { headers, cache: "no-store" }),
-      fetch(`${apiUrl}/api/issues`, { headers, cache: "no-store" }),
-      fetch(`${apiUrl}/api/activities/recent?limit=5`, { headers, cache: "no-store" })
-    ]);
-
-    const roomsResData = roomsRes.ok ? await roomsRes.json() : { data: [] };
-    const tenantsResData = tenantsRes.ok ? await tenantsRes.json() : { data: [] };
-    const invoicesResData = invoicesRes.ok ? await invoicesRes.json() : { data: [] };
-    const issuesResData = issuesRes.ok ? await issuesRes.json() : { data: [] };
-    const activitiesResData = activitiesRes.ok ? await activitiesRes.json() : [];
-
-    const rooms = Array.isArray(roomsResData) ? roomsResData : (roomsResData.data || []);
-    const tenants = Array.isArray(tenantsResData) ? tenantsResData : (tenantsResData.data || []);
-    const invoices = Array.isArray(invoicesResData) ? invoicesResData : (invoicesResData.data || []);
-    const issues = Array.isArray(issuesResData) ? issuesResData : (issuesResData.data || []);
-    const activities = Array.isArray(activitiesResData) ? activitiesResData : [];
-
-    const rentedRoomsCount = rooms.filter((r: any) => r.status === "RENTED").length;
-    const unpaidInvoicesCount = invoices.filter((i: any) => i.status === "UNPAID" || i.status === "PENDING").length;
-    const pendingIssuesCount = issues.filter((i: any) => i.status === "PENDING" || i.status === "OPEN").length;
-
-    return {
-      rentedRoomsCount,
-      tenantsCount: tenants.length,
-      unpaidInvoicesCount,
-      pendingIssuesCount,
-      invoices,
-      activities
-    };
-  } catch (error) {
-    console.error("Lỗi khi tải dữ liệu dashboard:", error);
-    return { rentedRoomsCount: 0, tenantsCount: 0, unpaidInvoicesCount: 0, pendingIssuesCount: 0, invoices: [], activities: [] };
-  }
-}
-
-export default async function LandlordDashboardPage() { 
-  const data = await fetchDashboardData();
-
   const metrics = [
-    { label: "Phòng đang thuê", value: data.rentedRoomsCount, icon: DoorOpen, color: "text-blue-600", bg: "bg-blue-100", href: "/landlord/rooms" }, 
+    { label: "Phòng đang thuê", value: data.rentedRoomsCount, icon: DoorOpen, color: "text-blue-600", bg: "bg-blue-100", href: "/landlord/room" }, 
     { label: "Khách thuê hiện tại", value: data.tenantsCount, icon: Users, color: "text-emerald-600", bg: "bg-emerald-100", href: "/landlord/tenants" }, 
     { label: "Hóa đơn chưa thu", value: data.unpaidInvoicesCount, icon: Receipt, color: "text-amber-600", bg: "bg-amber-100", href: "/landlord/invoices" },
     { label: "Sự cố cần xử lý", value: data.pendingIssuesCount, icon: FileWarning, color: "text-red-600", bg: "bg-red-100", href: "/landlord/issues" }
   ];
 
+  const isLoading = isLoadingRooms || isLoadingTenants || isLoadingInvoices || isLoadingIssues || isLoadingActivities;
+
   return (
-    <div className="p-2 sm:p-6 space-y-8">
+    <div className="p-2 sm:p-6 space-y-8 relative">
+      {isLoading && (
+        <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-50 flex items-center justify-center rounded-2xl">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        </div>
+      )}
+
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-slate-900">Tổng quan</h1>
         <p className="mt-2 text-slate-500">Theo dõi hoạt động kinh doanh nhà trọ của bạn trong tháng này.</p>

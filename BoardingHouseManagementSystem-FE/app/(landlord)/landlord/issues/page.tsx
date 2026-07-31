@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import apiClient from "@/lib/apiClient";
+import React, { useState } from "react";
+import apiClient, { fetcher } from "@/lib/apiClient";
 import { toast } from "sonner";
 import { ArrowLeft, Search, CheckCircle, Edit, ExternalLink, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import useSWR, { useSWRConfig } from "swr";
 
 interface Issue {
   id: number;
@@ -23,28 +24,15 @@ interface Issue {
 }
 
 export default function LandlordIssuesPage() {
-  const [issues, setIssues] = useState<Issue[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
   const [statusInput, setStatusInput] = useState("");
 
-  const fetchIssues = async () => {
-    setIsLoading(true);
-    try {
-      const res = await apiClient.get("/su-co");
-      setIssues(res.data);
-    } catch (error) {
-      toast.error("Không thể tải danh sách sự cố.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchIssues();
-  }, []);
+  const { data: swrIssues, isLoading } = useSWR('/su-co', fetcher);
+  const { mutate } = useSWRConfig();
+  
+  const issues = Array.isArray(swrIssues) ? swrIssues : (swrIssues?.data || []);
 
   const handleOpenEdit = (issue: Issue) => {
     setSelectedIssue(issue);
@@ -61,7 +49,7 @@ export default function LandlordIssuesPage() {
       });
       toast.success("Cập nhật trạng thái thành công!");
       setIsModalOpen(false);
-      fetchIssues();
+      mutate('/su-co');
     } catch (error) {
       toast.error("Không thể cập nhật trạng thái sự cố.");
     }

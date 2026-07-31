@@ -6,6 +6,8 @@ import com.example.boardinghouse.Modules.invoices.dto.InvoiceCreateRequest;
 import com.example.boardinghouse.Modules.invoices.dto.InvoiceResponse;
 import com.example.boardinghouse.Modules.utility.UtilityRecord;
 import com.example.boardinghouse.Modules.utility.UtilityRecordRepository;
+import com.example.boardinghouse.Modules.user.bankaccount.BankAccount;
+import com.example.boardinghouse.Modules.user.bankaccount.BankAccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +23,7 @@ public class InvoiceService {
     private final InvoiceRepository invoiceRepository;
     private final UtilityRecordRepository utilityRecordRepository;
     private final ContractRepository contractRepository;
+    private final BankAccountRepository bankAccountRepository;
 
     public InvoiceResponse createInvoice(InvoiceCreateRequest request) {
         // Validate Contract
@@ -76,6 +79,7 @@ public class InvoiceService {
         Invoice invoice = Invoice.builder()
                 .contractId(contract.getId())
                 .utilityRecordId(request.getUtilityRecordId())
+                .bankAccountId(request.getBankAccountId())
                 .invoiceCode("INV-" + System.currentTimeMillis())
                 .roomPrice(contract.getRentalPrice())
                 .electricityPrice(electricityCost)
@@ -128,7 +132,7 @@ public class InvoiceService {
     }
 
     private InvoiceResponse mapToResponse(Invoice invoice) {
-        return InvoiceResponse.builder()
+        InvoiceResponse.InvoiceResponseBuilder builder = InvoiceResponse.builder()
                 .id(invoice.getId())
                 .contractId(invoice.getContractId())
                 .utilityRecordId(invoice.getUtilityRecordId())
@@ -147,7 +151,18 @@ public class InvoiceService {
                 .dueDate(invoice.getDueDate())
                 .status(invoice.getStatus())
                 .paymentImageUrl(invoice.getPaymentImageUrl())
-                .createdAt(invoice.getCreatedAt())
-                .build();
+                .createdAt(invoice.getCreatedAt());
+
+        if (invoice.getBankAccountId() != null) {
+            bankAccountRepository.findById(invoice.getBankAccountId()).ifPresent(bank -> {
+                builder.bankAccountId(bank.getId());
+                builder.bankName(bank.getBankName());
+                builder.bankCode(bank.getBankCode());
+                builder.bankAccountNumber(bank.getAccountNumber());
+                builder.bankAccountHolder(bank.getAccountHolder());
+            });
+        }
+
+        return builder.build();
     }
 }

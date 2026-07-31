@@ -9,13 +9,12 @@ import { TenantModal } from "./_components/TenantModal";
 import { DeleteConfirmDialog } from "./_components/DeleteConfirmDialog";
 import { QuickContractModal } from "./_components/QuickContractModal";
 import { Tenant } from "./types";
-import apiClient from "@/lib/apiClient";
+import apiClient, { fetcher } from "@/lib/apiClient";
 import { toast } from "sonner";
 import Link from "next/link";
+import useSWR, { useSWRConfig } from "swr";
 
 export default function TenantsPage() {
-  const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   
   // Modal states
@@ -25,24 +24,17 @@ export default function TenantsPage() {
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
   const [contractTenant, setContractTenant] = useState<Tenant | null>(null);
 
-  const fetchTenants = async () => {
-    setIsLoading(true);
-    try {
-      const response = await apiClient.get("/tenants");
-      // Cấu trúc response có thể nằm trong .data.data tùy backend (thường là ApiResponse.success)
-      const data = response.data?.data || response.data || [];
-      setTenants(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Lỗi khi tải danh sách khách thuê:", error);
-      toast.error("Không thể tải danh sách khách thuê");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { data: swrTenants, isLoading } = useSWR('/tenants', fetcher);
+  const { mutate } = useSWRConfig();
+  
+  const tenants = useMemo<Tenant[]>(() => {
+    if (!swrTenants) return [];
+    return Array.isArray(swrTenants) ? swrTenants : (swrTenants.data || []);
+  }, [swrTenants]);
 
-  useEffect(() => {
-    fetchTenants();
-  }, []);
+  const handleSuccess = () => {
+    mutate('/tenants');
+  };
 
   const handleAddClick = () => {
     setSelectedTenant(null);
@@ -71,39 +63,42 @@ export default function TenantsPage() {
   }, [tenants, searchQuery]);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-8">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
       {/* Header section */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Link href="/landlord/dashboard" className="text-slate-400 hover:text-blue-600 transition-colors p-2 hover:bg-slate-50 rounded-full shrink-0">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-start sm:items-center gap-3">
+          <Link href="/landlord/management" className="text-slate-400 hover:text-blue-600 transition-colors mt-1 sm:mt-0">
             <ArrowLeft className="w-6 h-6" />
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
-              <Users className="w-8 h-8 text-blue-600" />
-              Quản lý Khách thuê
-            </h1>
-            <p className="text-slate-500 mt-1">Quản lý thông tin liên hệ và giấy tờ của tất cả khách thuê trong hệ thống.</p>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Quản lý Khách thuê</h1>
+            <p className="mt-1 text-sm text-slate-500">Quản lý thông tin liên hệ và giấy tờ của tất cả khách thuê trong hệ thống.</p>
           </div>
         </div>
         
-        <Button onClick={handleAddClick} className="bg-blue-600 hover:bg-blue-700 h-11 px-6 shadow-sm shrink-0">
-          <Plus className="w-5 h-5 mr-2" />
-          Thêm khách thuê
-        </Button>
+        <button 
+          onClick={handleAddClick} 
+          className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 shrink-0"
+        >
+          <Plus className="w-5 h-5" />
+          <span>Thêm khách thuê</span>
+        </button>
       </div>
 
       {/* Main Content Area */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         {/* Toolbar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="relative w-full sm:max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-            <Input
-              placeholder="Tìm kiếm theo tên, số điện thoại..."
+        <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-50/50">
+          <div className="relative w-full sm:max-w-xs">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+              <Search className="w-5 h-5" />
+            </div>
+            <input
+              type="text"
+              placeholder="Tìm kiếm khách thuê..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-11 w-full bg-slate-50 border-slate-200 focus:bg-white"
+              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
             />
           </div>
           
@@ -133,7 +128,7 @@ export default function TenantsPage() {
         onClose={() => setIsModalOpen(false)}
         tenant={selectedTenant}
         onSuccess={(savedTenant, openContract) => {
-          fetchTenants();
+          handleSuccess();
           if (openContract && savedTenant) {
             setContractTenant(savedTenant);
             setIsContractModalOpen(true);
@@ -145,14 +140,14 @@ export default function TenantsPage() {
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
         tenant={selectedTenant}
-        onSuccess={fetchTenants}
+        onSuccess={handleSuccess}
       />
 
       <QuickContractModal
         isOpen={isContractModalOpen}
         onClose={() => setIsContractModalOpen(false)}
         tenant={contractTenant}
-        onSuccess={fetchTenants}
+        onSuccess={handleSuccess}
       />
     </div>
   );
