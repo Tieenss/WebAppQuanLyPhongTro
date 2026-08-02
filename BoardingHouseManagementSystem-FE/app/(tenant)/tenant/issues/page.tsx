@@ -3,8 +3,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import apiClient from "@/lib/apiClient";
 import { toast } from "sonner";
-import { ArrowLeft, Search, Plus, Upload, X, CheckCircle, ExternalLink } from "lucide-react";
+import { ArrowLeft, Search, Plus, Upload, X, CheckCircle, ExternalLink, Eye, Info, Clock, User, AlertTriangle } from "lucide-react";
 import Link from "next/link";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface Issue {
   id: number;
@@ -19,6 +20,8 @@ interface Issue {
   status: string;
   createdAt: string;
   resolvedAt: string;
+  assigneeId?: number;
+  assigneeName?: string;
 }
 
 interface ActiveContract {
@@ -53,8 +56,8 @@ export default function TenantIssuesPage() {
 
       // Get active contract to know the room
       const resContracts = await apiClient.get("/contracts");
-      const contracts = resContracts.data;
-      const active = contracts.find((c: any) => c.status === "DANG_THUE" || c.status === "ACTIVE");
+      const contracts = Array.isArray(resContracts.data) ? resContracts.data : resContracts.data?.data || [];
+      const active = contracts.find((c: any) => c.status?.toLowerCase() === "dang_thue" || c.status?.toLowerCase() === "active");
       if (active) {
         setActiveContract(active);
       }
@@ -197,16 +200,17 @@ export default function TenantIssuesPage() {
                 <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Mức độ</th>
                 <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Trạng thái</th>
                 <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Ngày báo cáo</th>
+                <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Thao tác</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-slate-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-10 text-center text-slate-500">Đang tải dữ liệu...</td>
+                  <td colSpan={6} className="px-6 py-10 text-center text-slate-500">Đang tải dữ liệu...</td>
                 </tr>
               ) : issues.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-10 text-center text-slate-500">Bạn chưa gửi báo cáo sự cố nào.</td>
+                  <td colSpan={6} className="px-6 py-10 text-center text-slate-500">Bạn chưa gửi báo cáo sự cố nào.</td>
                 </tr>
               ) : (
                 issues.map((issue) => (
@@ -232,6 +236,69 @@ export default function TenantIssuesPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                       {new Date(issue.createdAt).toLocaleDateString("vi-VN")}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <button className="text-blue-600 hover:text-blue-800 flex items-center gap-1 font-medium bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors">
+                            <Eye className="w-4 h-4" />
+                            Chi tiết
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle className="text-xl font-bold text-slate-800 border-b pb-3">Chi tiết sự cố: Phòng {issue.roomNumber}</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4 py-2">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                <p className="text-xs text-slate-500 mb-1 flex items-center gap-1"><AlertTriangle className="w-3 h-3"/> Loại sự cố</p>
+                                <p className="font-semibold text-slate-800">{issue.issueType}</p>
+                              </div>
+                              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                <p className="text-xs text-slate-500 mb-1 flex items-center gap-1"><AlertTriangle className="w-3 h-3"/> Mức độ</p>
+                                <div>{getPriorityBadge(issue.priority)}</div>
+                              </div>
+                              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                <p className="text-xs text-slate-500 mb-1 flex items-center gap-1"><Info className="w-3 h-3"/> Trạng thái</p>
+                                <div>{getStatusBadge(issue.status)}</div>
+                              </div>
+                              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                <p className="text-xs text-slate-500 mb-1 flex items-center gap-1"><Clock className="w-3 h-3"/> Thời gian báo</p>
+                                <p className="font-medium text-slate-800">{new Date(issue.createdAt).toLocaleString("vi-VN")}</p>
+                              </div>
+                              {issue.assigneeName && (
+                                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 col-span-2">
+                                  <p className="text-xs text-slate-500 mb-1 flex items-center gap-1"><User className="w-3 h-3"/> Người tiếp nhận / xử lý</p>
+                                  <p className="font-medium text-slate-800">{issue.assigneeName}</p>
+                                </div>
+                              )}
+                              {issue.resolvedAt && (
+                                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 col-span-2">
+                                  <p className="text-xs text-slate-500 mb-1 flex items-center gap-1"><CheckCircle className="w-3 h-3 text-green-500"/> Thời gian hoàn thành</p>
+                                  <p className="font-medium text-green-700">{new Date(issue.resolvedAt).toLocaleString("vi-VN")}</p>
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div>
+                              <p className="text-sm font-semibold text-slate-700 mb-2">Mô tả chi tiết</p>
+                              <div className="bg-slate-50 p-4 rounded-xl text-sm text-slate-700 whitespace-pre-wrap border border-slate-100">
+                                {issue.description}
+                              </div>
+                            </div>
+
+                            {issue.imageUrl && (
+                              <div>
+                                <p className="text-sm font-semibold text-slate-700 mb-2">Ảnh đính kèm</p>
+                                <div className="rounded-xl overflow-hidden border border-slate-200">
+                                  <img src={issue.imageUrl} alt="Sự cố" className="w-full max-h-64 object-contain bg-slate-100" />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                     </td>
                   </tr>
                 ))

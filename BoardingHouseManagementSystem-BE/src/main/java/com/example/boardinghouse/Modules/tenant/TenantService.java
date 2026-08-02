@@ -23,6 +23,9 @@ public class TenantService {
 
     @Transactional(readOnly = true)
     public List<TenantResponse> getTenants() {
+        if (SecurityUtils.isAdmin()) {
+            return userRepository.findByRole("TENANT").stream().map(this::mapToResponse).collect(Collectors.toList());
+        }
         Long landlordId = SecurityUtils.getCurrentUserId();
         List<User> users = userRepository.findByLandlordIdAndRole(landlordId, "TENANT");
         
@@ -31,6 +34,10 @@ public class TenantService {
 
     @Transactional(readOnly = true)
     public TenantResponse getTenantById(Long id) {
+        if (SecurityUtils.isAdmin()) {
+            User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("Tenant not found"));
+            return mapToResponse(user);
+        }
         Long landlordId = SecurityUtils.getCurrentUserId();
         User user = userRepository.findByIdAndLandlordId(id, landlordId)
                 .orElseThrow(() -> new RuntimeException("Tenant not found or access denied"));
@@ -70,9 +77,14 @@ public class TenantService {
 
     @Transactional
     public TenantResponse updateTenant(Long id, TenantRequest request) {
-        Long landlordId = SecurityUtils.getCurrentUserId();
-        User user = userRepository.findByIdAndLandlordId(id, landlordId)
-                .orElseThrow(() -> new RuntimeException("Tenant not found or access denied"));
+        User user;
+        if (SecurityUtils.isAdmin()) {
+            user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("Tenant not found"));
+        } else {
+            Long landlordId = SecurityUtils.getCurrentUserId();
+            user = userRepository.findByIdAndLandlordId(id, landlordId)
+                    .orElseThrow(() -> new RuntimeException("Tenant not found or access denied"));
+        }
                 
         user.setFullName(request.getFullName());
         user.setPhone(request.getPhone());
@@ -96,9 +108,14 @@ public class TenantService {
 
     @Transactional
     public void deleteTenant(Long id) {
-        Long landlordId = SecurityUtils.getCurrentUserId();
-        User user = userRepository.findByIdAndLandlordId(id, landlordId)
-                .orElseThrow(() -> new RuntimeException("Tenant not found or access denied"));
+        User user;
+        if (SecurityUtils.isAdmin()) {
+            user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("Tenant not found"));
+        } else {
+            Long landlordId = SecurityUtils.getCurrentUserId();
+            user = userRepository.findByIdAndLandlordId(id, landlordId)
+                    .orElseThrow(() -> new RuntimeException("Tenant not found or access denied"));
+        }
                 
         tenantProfileRepository.deleteByUserId(user.getId());
         userRepository.delete(user);

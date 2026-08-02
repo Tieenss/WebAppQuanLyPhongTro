@@ -32,6 +32,10 @@ public class Issue {
     @Column(name = "issue_type", nullable = false, length = 50)
     private String issueType;
 
+    @Column(name = "title", nullable = false, length = 255)
+    @Builder.Default
+    private String title = "Báo cáo sự cố";
+
     @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
 

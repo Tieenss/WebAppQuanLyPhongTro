@@ -55,6 +55,12 @@ public class ContractService {
                 .collect(Collectors.toList());
     }
 
+    public List<ContractResponse> getContractsByTenantId(Long tenantId) {
+        return contractRepository.findByTenantId(tenantId).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     public ContractResponse createContract(ContractRequest request) {
         Room room = roomRepository.findById(request.getRoomId())
                 .orElseThrow(() -> new RuntimeException("Room not found"));

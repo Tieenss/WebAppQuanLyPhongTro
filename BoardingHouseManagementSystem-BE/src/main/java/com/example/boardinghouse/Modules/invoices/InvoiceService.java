@@ -125,10 +125,14 @@ public class InvoiceService {
     }
 
     public void deleteInvoice(Long invoiceId) {
-        if (!invoiceRepository.existsById(invoiceId)) {
-            throw new RuntimeException("Invoice not found with ID: " + invoiceId);
-        }
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new RuntimeException("Invoice not found with ID: " + invoiceId));
+        
         invoiceRepository.deleteById(invoiceId);
+        
+        if (invoice.getUtilityRecordId() != null) {
+            utilityRecordRepository.deleteById(invoice.getUtilityRecordId());
+        }
     }
 
     private InvoiceResponse mapToResponse(Invoice invoice) {

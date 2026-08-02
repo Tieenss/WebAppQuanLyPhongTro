@@ -231,7 +231,7 @@ export default function InvoicesPage() {
 
       <CreateInvoiceModal 
         isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)}
+        onOpenChange={(open) => setIsModalOpen(open)}
         contracts={contracts}
         onSuccess={() => mutate('/invoices')}
       />

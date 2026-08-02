@@ -3,6 +3,7 @@ package com.example.boardinghouse.Modules.utility;
 import com.example.boardinghouse.Modules.room.RoomRepository;
 import com.example.boardinghouse.Modules.utility.dto.UtilityRecordRequest;
 import com.example.boardinghouse.Modules.utility.dto.UtilityRecordResponse;
+import com.example.boardinghouse.Modules.invoices.InvoiceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ public class UtilityRecordService {
 
     private final UtilityRecordRepository utilityRecordRepository;
     private final RoomRepository roomRepository;
+    private final InvoiceRepository invoiceRepository;
 
     public UtilityRecordResponse createUtilityRecord(UtilityRecordRequest request) {
         // Validate room exists
@@ -33,7 +35,19 @@ public class UtilityRecordService {
                 .findByRoomIdAndRecordDateBetween(request.getRoomId(), startDate, endDate);
 
         if (existingRecord.isPresent()) {
-            throw new RuntimeException("Utility record already exists for this room in the selected month.");
+            boolean isUsed = invoiceRepository.existsByUtilityRecordId(existingRecord.get().getId());
+            if (isUsed) {
+                throw new RuntimeException("Đã tồn tại hóa đơn hoặc bản ghi điện nước cho phòng này trong tháng được chọn.");
+            } else {
+                // Update the orphaned record instead of failing
+                UtilityRecord recordToUpdate = existingRecord.get();
+                recordToUpdate.setElectricityIndex(request.getElectricityIndex());
+                recordToUpdate.setWaterIndex(request.getWaterIndex());
+                recordToUpdate.setElectricityImage(request.getElectricityImage());
+                recordToUpdate.setWaterImage(request.getWaterImage());
+                recordToUpdate.setRecordDate(request.getRecordDate());
+                return mapToResponse(utilityRecordRepository.save(recordToUpdate));
+            }
         }
 
         UtilityRecord record = UtilityRecord.builder()
@@ -58,9 +72,17 @@ public class UtilityRecordService {
     }
 
     public UtilityRecordResponse getLatestUtilityRecordByRoom(Long roomId) {
-        return utilityRecordRepository.findTopByRoomIdOrderByRecordDateDesc(roomId)
-                .map(this::mapToResponse)
-                .orElse(null);
+        List<UtilityRecord> records = utilityRecordRepository.findByRoomIdOrderByRecordDateDesc(roomId);
+        for (UtilityRecord record : records) {
+            boolean isUsed = invoiceRepository.existsByUtilityRecordId(record.getId());
+            if (isUsed) {
+                return mapToResponse(record);
+            } else {
+                // Self-healing: Delete orphaned records
+                utilityRecordRepository.delete(record);
+            }
+        }
+        return null;
     }
 
     private UtilityRecordResponse mapToResponse(UtilityRecord record) {
