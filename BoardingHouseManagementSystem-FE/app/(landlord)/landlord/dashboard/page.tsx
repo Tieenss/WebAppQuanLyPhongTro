@@ -27,7 +27,7 @@ export default function LandlordDashboardPage() {
   const { data: tenantsRes, isLoading: isLoadingTenants } = useSWR("/tenants", fetcher);
   const { data: invoicesRes, isLoading: isLoadingInvoices } = useSWR("/invoices", fetcher);
   const { data: issuesRes, isLoading: isLoadingIssues } = useSWR("/su-co", fetcher);
-  const { data: activitiesRes, isLoading: isLoadingActivities } = useSWR("/activities/recent?limit=5", fetcher);
+  const { data: activitiesRes, isLoading: isLoadingActivities } = useSWR("/activities/recent?limit=10", fetcher);
 
   const rooms = roomsRes || [];
   const tenants = tenantsRes || [];
@@ -126,7 +126,9 @@ export default function LandlordDashboardPage() {
 
         <Card className="lg:col-span-3 border-slate-100 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold">Hoạt động gần đây</CardTitle>
+            <CardTitle className="text-xl font-semibold">
+              {userRole === "Quản trị viên" ? "Tất cả hoạt động hệ thống" : "Hoạt động gần đây"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
@@ -136,6 +138,7 @@ export default function LandlordDashboardPage() {
                 data.activities.map((activity: any, i: number) => {
                   let colorClass = 'bg-blue-500';
                   if (activity.actionType === 'CREATE') colorClass = 'bg-emerald-500';
+                  else if (activity.actionType === 'UPDATE') colorClass = 'bg-amber-500';
                   else if (activity.actionType === 'DELETE') colorClass = 'bg-red-500';
                   
                   // Simple formatting for time

@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long> {
     List<ActivityLog> findByLandlordIdOrderByCreatedAtDesc(Long landlordId, Pageable pageable);
+    List<ActivityLog> findAllByOrderByCreatedAtDesc(Pageable pageable);
 }
