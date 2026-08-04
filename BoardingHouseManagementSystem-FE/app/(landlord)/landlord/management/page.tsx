@@ -15,24 +15,19 @@ export default function ManagementDashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: buildingsRes } = useSWR("/buildings", fetcher);
-  const { data: roomsRes } = useSWR("/rooms", fetcher);
-  const { data: tenantsRes } = useSWR("/tenants", fetcher);
-  const { data: contractsRes } = useSWR("/contracts", fetcher);
-  const { data: invoicesRes } = useSWR("/invoices", fetcher);
-  const { data: issuesRes } = useSWR("/su-co", fetcher);
-  const { data: servicesRes } = useSWR("/subscriptions", fetcher);
+  const { data: summaryRes } = useSWR("/dashboard/summary", fetcher);
 
   const managedBuildings = buildingsRes || [];
   
   const counts = useMemo(() => ({
-    buildings: managedBuildings.length,
-    rooms: (roomsRes || []).length,
-    tenants: (tenantsRes || []).length,
-    contracts: (contractsRes || []).length,
-    invoices: (invoicesRes || []).length,
-    issues: (issuesRes || []).length,
-    services: (servicesRes || []).length,
-  }), [managedBuildings, roomsRes, tenantsRes, contractsRes, invoicesRes, issuesRes, servicesRes]);
+    buildings: summaryRes?.buildingsCount || 0,
+    rooms: summaryRes?.roomsCount || 0,
+    tenants: summaryRes?.tenantsCount || 0,
+    contracts: summaryRes?.contractsCount || 0,
+    invoices: summaryRes?.invoicesCount || 0,
+    issues: summaryRes?.issuesCount || 0,
+    services: summaryRes?.servicesCount || 0,
+  }), [summaryRes]);
 
   const cards = [
     { href: "/landlord/building", label: "Quản lý nhà trọ", icon: Home, color: "text-indigo-500", bgColor: "bg-indigo-100", count: counts.buildings },
