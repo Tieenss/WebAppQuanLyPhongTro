@@ -287,7 +287,7 @@ export default function RoomsPage() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] md:h-[calc(100vh-6rem)]">
+    <div className="p-4 sm:p-6 w-full flex flex-col h-[calc(100vh-4rem)] md:h-[calc(100vh-6rem)]">
       {/* Header section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex items-start sm:items-center gap-3">
