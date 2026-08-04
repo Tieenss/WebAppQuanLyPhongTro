@@ -83,7 +83,7 @@ export default function ContractsPage() {
       const enhancedContract = {
         ...first,
         area: room?.area || "",
-        leaseDuration: duration > 0 ? duration : (first.leaseDuration || "")
+        leaseDuration: Number(first.leaseDuration) || duration
       };
 
       setSelectedContract(enhancedContract);
@@ -300,7 +300,7 @@ export default function ContractsPage() {
       </div>
 
       <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <PanelGroup direction="horizontal" className="w-full h-full flex">
+        <PanelGroup orientation="horizontal" className="w-full h-full flex">
           {/* CỘT TRÁI: DANH SÁCH HỢP ĐỒNG */}
           <Panel defaultSize={65} minSize={30} className="w-full md:w-2/3 flex flex-col border-r border-slate-100 bg-slate-50/30 relative">
             

@@ -21,10 +21,21 @@ public class InvoiceCreateRequest {
     
     // Phí dịch vụ khác (rác, wifi...)
     private BigDecimal servicePrice;
+    private Integer serviceQuantity;
+    private BigDecimal serviceUnitPrice;
 
     private BigDecimal internetPrice;
+    private Integer internetQuantity;
+    private BigDecimal internetUnitPrice;
+
     private BigDecimal cleaningPrice;
+    private Integer cleaningQuantity;
+    private BigDecimal cleaningUnitPrice;
+
     private BigDecimal parkingPrice;
+    private Integer parkingQuantity;
+    private BigDecimal parkingUnitPrice;
+
     private BigDecimal otherPrice;
     private BigDecimal debtFromPreviousMonth;
     private BigDecimal discount;

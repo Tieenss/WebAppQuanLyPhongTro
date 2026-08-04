@@ -40,10 +40,14 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
     defaultValues: {
       electricityUnitPrice: 3500,
       waterUnitPrice: 25000,
-      servicePrice: 0,
-      internetPrice: 0,
-      cleaningPrice: 0,
-      parkingPrice: 0,
+      serviceQuantity: 1,
+      serviceUnitPrice: 0,
+      internetQuantity: 1,
+      internetUnitPrice: 0,
+      cleaningQuantity: 1,
+      cleaningUnitPrice: 0,
+      parkingQuantity: 0,
+      parkingUnitPrice: 0,
       otherPrice: 0,
       debtFromPreviousMonth: 0,
       discount: 0,
@@ -92,9 +96,9 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
       // Auto-fill Step 2 values from Contract
       setVal2("electricityUnitPrice", selectedContract?.electricityPrice || 0);
       setVal2("waterUnitPrice", selectedContract?.waterPrice || 0);
-      setVal2("servicePrice", selectedContract?.servicePrice || 0);
-      setVal2("internetPrice", selectedContract?.wifiPrice || 0);
-      setVal2("parkingPrice", selectedContract?.parkingPrice || 0);
+      setVal2("serviceUnitPrice", selectedContract?.servicePrice || 0);
+      setVal2("internetUnitPrice", selectedContract?.wifiPrice || 0);
+      setVal2("parkingUnitPrice", selectedContract?.parkingPrice || 0);
     } else {
       setOldUtility(null);
     }
@@ -153,13 +157,17 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
         utilityRecordId: newUtilityRecordId,
         electricityUnitPrice: Number(data.electricityUnitPrice),
         waterUnitPrice: Number(data.waterUnitPrice),
-        servicePrice: Number(data.servicePrice),
-        internetPrice: Number(data.internetPrice),
-        cleaningPrice: Number(data.cleaningPrice),
-        parkingPrice: Number(data.parkingPrice),
-        otherPrice: Number(data.otherPrice),
-        debtFromPreviousMonth: Number(data.debtFromPreviousMonth),
-        discount: Number(data.discount),
+        serviceQuantity: Number(data.serviceQuantity) || 1,
+        serviceUnitPrice: Number(data.serviceUnitPrice) || 0,
+        internetQuantity: Number(data.internetQuantity) || 1,
+        internetUnitPrice: Number(data.internetUnitPrice) || 0,
+        cleaningQuantity: Number(data.cleaningQuantity) || 1,
+        cleaningUnitPrice: Number(data.cleaningUnitPrice) || 0,
+        parkingQuantity: Number(data.parkingQuantity) || 0,
+        parkingUnitPrice: Number(data.parkingUnitPrice) || 0,
+        otherPrice: Number(data.otherPrice) || 0,
+        debtFromPreviousMonth: Number(data.debtFromPreviousMonth) || 0,
+        discount: Number(data.discount) || 0,
         bankAccountId: data.bankAccountId ? Number(data.bankAccountId) : null,
         dueDate: data.dueDate
       });
@@ -179,10 +187,10 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
     const roomP = selectedContract?.rentalPrice || 0;
     const elecP = electricityUsage * (Number(s2.electricityUnitPrice) || 0);
     const waterP = waterUsage * (Number(s2.waterUnitPrice) || 0);
-    const servP = Number(s2.servicePrice) || 0;
-    const intP = Number(s2.internetPrice) || 0;
-    const cleanP = Number(s2.cleaningPrice) || 0;
-    const parkP = Number(s2.parkingPrice) || 0;
+    const servP = (Number(s2.serviceQuantity) || 1) * (Number(s2.serviceUnitPrice) || 0);
+    const intP = (Number(s2.internetQuantity) || 1) * (Number(s2.internetUnitPrice) || 0);
+    const cleanP = (Number(s2.cleaningQuantity) || 1) * (Number(s2.cleaningUnitPrice) || 0);
+    const parkP = (Number(s2.parkingQuantity) || 0) * (Number(s2.parkingUnitPrice) || 0);
     const otherP = Number(s2.otherPrice) || 0;
     const debt = Number(s2.debtFromPreviousMonth) || 0;
     const disc = Number(s2.discount) || 0;
@@ -335,24 +343,52 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
                       </div>
                     </div>
 
-                    <div>
+                    <div className="col-span-2 bg-white border border-slate-200 rounded-lg p-3">
                       <label className="block text-[10px] font-medium text-slate-500 uppercase mb-1">Phí Rác/Vệ sinh</label>
-                      <input type="number" className="w-full border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium text-slate-700" {...regStep2("cleaningPrice")} />
+                      <div className="flex items-center gap-2">
+                        <input type="number" placeholder="SL" defaultValue={1} className="w-16 sm:w-20 border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium text-slate-700" {...regStep2("cleaningQuantity")} />
+                        <span className="text-xs text-slate-500 font-medium">x</span>
+                        <input type="number" placeholder="Đơn giá" className="w-24 sm:w-28 border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium text-slate-700" {...regStep2("cleaningUnitPrice")} />
+                        <span className="text-xs font-bold text-slate-800 ml-auto whitespace-nowrap">
+                          = {new Intl.NumberFormat('vi-VN').format((Number(s2.cleaningQuantity) || 1) * (Number(s2.cleaningUnitPrice) || 0))} đ
+                        </span>
+                      </div>
                     </div>
                     
-                    <div>
+                    <div className="col-span-2 bg-white border border-slate-200 rounded-lg p-3">
                       <label className="block text-[10px] font-medium text-slate-500 uppercase mb-1">Internet/Wifi</label>
-                      <input type="number" className="w-full border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium text-slate-700" {...regStep2("internetPrice")} />
+                      <div className="flex items-center gap-2">
+                        <input type="number" placeholder="SL" defaultValue={1} className="w-16 sm:w-20 border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium text-slate-700" {...regStep2("internetQuantity")} />
+                        <span className="text-xs text-slate-500 font-medium">x</span>
+                        <input type="number" placeholder="Đơn giá" className="w-24 sm:w-28 border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium text-slate-700" {...regStep2("internetUnitPrice")} />
+                        <span className="text-xs font-bold text-slate-800 ml-auto whitespace-nowrap">
+                          = {new Intl.NumberFormat('vi-VN').format((Number(s2.internetQuantity) || 1) * (Number(s2.internetUnitPrice) || 0))} đ
+                        </span>
+                      </div>
                     </div>
 
-                    <div>
+                    <div className="col-span-2 bg-white border border-slate-200 rounded-lg p-3">
                       <label className="block text-[10px] font-medium text-slate-500 uppercase mb-1">Gửi Xe</label>
-                      <input type="number" className="w-full border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium text-slate-700" {...regStep2("parkingPrice")} />
+                      <div className="flex items-center gap-2">
+                        <input type="number" placeholder="SL" defaultValue={0} className="w-16 sm:w-20 border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium text-slate-700" {...regStep2("parkingQuantity")} />
+                        <span className="text-xs text-slate-500 font-medium">x</span>
+                        <input type="number" placeholder="Đơn giá" className="w-24 sm:w-28 border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium text-slate-700" {...regStep2("parkingUnitPrice")} />
+                        <span className="text-xs font-bold text-slate-800 ml-auto whitespace-nowrap">
+                          = {new Intl.NumberFormat('vi-VN').format((Number(s2.parkingQuantity) || 0) * (Number(s2.parkingUnitPrice) || 0))} đ
+                        </span>
+                      </div>
                     </div>
                     
-                    <div>
+                    <div className="col-span-2 bg-white border border-slate-200 rounded-lg p-3">
                       <label className="block text-[10px] font-medium text-slate-500 uppercase mb-1">Dịch vụ chung</label>
-                      <input type="number" className="w-full border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium text-slate-700" {...regStep2("servicePrice")} />
+                      <div className="flex items-center gap-2">
+                        <input type="number" placeholder="SL" defaultValue={1} className="w-16 sm:w-20 border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium text-slate-700" {...regStep2("serviceQuantity")} />
+                        <span className="text-xs text-slate-500 font-medium">x</span>
+                        <input type="number" placeholder="Đơn giá" className="w-24 sm:w-28 border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium text-slate-700" {...regStep2("serviceUnitPrice")} />
+                        <span className="text-xs font-bold text-slate-800 ml-auto whitespace-nowrap">
+                          = {new Intl.NumberFormat('vi-VN').format((Number(s2.serviceQuantity) || 1) * (Number(s2.serviceUnitPrice) || 0))} đ
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -426,7 +462,7 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
                     </div>
                     <div className="text-right">
                       <p className="text-slate-500 mb-1">Hạn thanh toán</p>
-                      <p className="font-bold text-slate-800">{format(new Date(s2.dueDate), 'dd/MM/yyyy')}</p>
+                      <p className="font-bold text-slate-800">{s2.dueDate ? format(new Date(s2.dueDate), 'dd/MM/yyyy') : "N/A"}</p>
                     </div>
                   </div>
 
@@ -434,15 +470,19 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
                     <thead className="border-y border-slate-200 text-slate-600">
                       <tr>
                         <th className="py-2 font-semibold">SẢN PHẨM</th>
-                        <th className="py-2 font-semibold text-center">SL</th>
-                        <th className="py-2 font-semibold text-right">ĐƠN GIÁ</th>
-                        <th className="py-2 font-semibold text-right">THÀNH TIỀN</th>
+                        <th className="py-2 font-semibold text-center w-14">CŨ</th>
+                        <th className="py-2 font-semibold text-center w-14">MỚI</th>
+                        <th className="py-2 font-semibold text-center w-14">SL</th>
+                        <th className="py-2 font-semibold text-right w-24">ĐƠN GIÁ</th>
+                        <th className="py-2 font-semibold text-right w-28">THÀNH TIỀN</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 border-b border-slate-200 text-slate-800">
                       {selectedContract?.rentalPrice > 0 && (
                         <tr>
-                          <td className="py-3 font-medium">Tiền phòng</td>
+                          <td className="py-3 font-medium text-slate-700">Tiền phòng</td>
+                          <td className="py-3 text-center text-slate-400 text-xs bg-slate-50/50">-</td>
+                          <td className="py-3 text-center text-slate-400 text-xs bg-slate-50/50">-</td>
                           <td className="py-3 text-center">1</td>
                           <td className="py-3 text-right">{new Intl.NumberFormat('vi-VN').format(selectedContract.rentalPrice)}</td>
                           <td className="py-3 text-right font-semibold">{new Intl.NumberFormat('vi-VN').format(selectedContract.rentalPrice)}</td>
@@ -450,7 +490,9 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
                       )}
                       {electricityUsage > 0 && (
                         <tr>
-                          <td className="py-3 font-medium">Tiền điện <span className="text-xs font-normal text-slate-500 block">Kỳ mới {electricityIndexNew}, Kỳ cũ {oldUtility?.electricityIndex || 0}</span></td>
+                          <td className="py-3 font-medium text-slate-700">Tiền điện</td>
+                          <td className="py-3 text-center text-slate-500 text-xs bg-slate-50/50">{oldUtility?.electricityIndex || 0}</td>
+                          <td className="py-3 text-center text-slate-500 text-xs bg-slate-50/50">{electricityIndexNew}</td>
                           <td className="py-3 text-center">{electricityUsage}</td>
                           <td className="py-3 text-right">{new Intl.NumberFormat('vi-VN').format(s2.electricityUnitPrice || 0)}</td>
                           <td className="py-3 text-right font-semibold">{new Intl.NumberFormat('vi-VN').format(electricityUsage * (Number(s2.electricityUnitPrice) || 0))}</td>
@@ -458,47 +500,59 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
                       )}
                       {waterUsage > 0 && (
                         <tr>
-                          <td className="py-3 font-medium">Tiền nước <span className="text-xs font-normal text-slate-500 block">Kỳ mới {waterIndexNew}, Kỳ cũ {oldUtility?.waterIndex || 0}</span></td>
+                          <td className="py-3 font-medium text-slate-700">Tiền nước</td>
+                          <td className="py-3 text-center text-slate-500 text-xs bg-slate-50/50">{oldUtility?.waterIndex || 0}</td>
+                          <td className="py-3 text-center text-slate-500 text-xs bg-slate-50/50">{waterIndexNew}</td>
                           <td className="py-3 text-center">{waterUsage}</td>
                           <td className="py-3 text-right">{new Intl.NumberFormat('vi-VN').format(s2.waterUnitPrice || 0)}</td>
                           <td className="py-3 text-right font-semibold">{new Intl.NumberFormat('vi-VN').format(waterUsage * (Number(s2.waterUnitPrice) || 0))}</td>
                         </tr>
                       )}
-                      {Number(s2.internetPrice) > 0 && (
+                      {Number(s2.internetUnitPrice) > 0 && (
                         <tr>
-                          <td className="py-3 font-medium">Tiền Internet/Wifi</td>
-                          <td className="py-3 text-center">-</td>
-                          <td className="py-3 text-right">-</td>
-                          <td className="py-3 text-right font-semibold">{new Intl.NumberFormat('vi-VN').format(Number(s2.internetPrice))}</td>
+                          <td className="py-3 font-medium text-slate-700">Tiền Internet/Wifi</td>
+                          <td className="py-3 text-center text-slate-400 text-xs bg-slate-50/50">-</td>
+                          <td className="py-3 text-center text-slate-400 text-xs bg-slate-50/50">-</td>
+                          <td className="py-3 text-center">{Number(s2.internetQuantity) || 1}</td>
+                          <td className="py-3 text-right">{new Intl.NumberFormat('vi-VN').format(Number(s2.internetUnitPrice))}</td>
+                          <td className="py-3 text-right font-semibold">{new Intl.NumberFormat('vi-VN').format((Number(s2.internetQuantity) || 1) * Number(s2.internetUnitPrice))}</td>
                         </tr>
                       )}
-                      {Number(s2.servicePrice) > 0 && (
+                      {Number(s2.serviceUnitPrice) > 0 && (
                         <tr>
-                          <td className="py-3 font-medium">Phí dịch vụ chung</td>
-                          <td className="py-3 text-center">-</td>
-                          <td className="py-3 text-right">-</td>
-                          <td className="py-3 text-right font-semibold">{new Intl.NumberFormat('vi-VN').format(Number(s2.servicePrice))}</td>
+                          <td className="py-3 font-medium text-slate-700">Phí dịch vụ chung</td>
+                          <td className="py-3 text-center text-slate-400 text-xs bg-slate-50/50">-</td>
+                          <td className="py-3 text-center text-slate-400 text-xs bg-slate-50/50">-</td>
+                          <td className="py-3 text-center">{Number(s2.serviceQuantity) || 1}</td>
+                          <td className="py-3 text-right">{new Intl.NumberFormat('vi-VN').format(Number(s2.serviceUnitPrice))}</td>
+                          <td className="py-3 text-right font-semibold">{new Intl.NumberFormat('vi-VN').format((Number(s2.serviceQuantity) || 1) * Number(s2.serviceUnitPrice))}</td>
                         </tr>
                       )}
-                      {Number(s2.cleaningPrice) > 0 && (
+                      {Number(s2.cleaningUnitPrice) > 0 && (
                         <tr>
-                          <td className="py-3 font-medium">Phí vệ sinh/rác</td>
-                          <td className="py-3 text-center">-</td>
-                          <td className="py-3 text-right">-</td>
-                          <td className="py-3 text-right font-semibold">{new Intl.NumberFormat('vi-VN').format(Number(s2.cleaningPrice))}</td>
+                          <td className="py-3 font-medium text-slate-700">Phí vệ sinh/rác</td>
+                          <td className="py-3 text-center text-slate-400 text-xs bg-slate-50/50">-</td>
+                          <td className="py-3 text-center text-slate-400 text-xs bg-slate-50/50">-</td>
+                          <td className="py-3 text-center">{Number(s2.cleaningQuantity) || 1}</td>
+                          <td className="py-3 text-right">{new Intl.NumberFormat('vi-VN').format(Number(s2.cleaningUnitPrice))}</td>
+                          <td className="py-3 text-right font-semibold">{new Intl.NumberFormat('vi-VN').format((Number(s2.cleaningQuantity) || 1) * Number(s2.cleaningUnitPrice))}</td>
                         </tr>
                       )}
-                      {Number(s2.parkingPrice) > 0 && (
+                      {Number(s2.parkingUnitPrice) > 0 && (
                         <tr>
-                          <td className="py-3 font-medium">Phí giữ xe</td>
-                          <td className="py-3 text-center">-</td>
-                          <td className="py-3 text-right">-</td>
-                          <td className="py-3 text-right font-semibold">{new Intl.NumberFormat('vi-VN').format(Number(s2.parkingPrice))}</td>
+                          <td className="py-3 font-medium text-slate-700">Phí gửi xe</td>
+                          <td className="py-3 text-center text-slate-400 text-xs bg-slate-50/50">-</td>
+                          <td className="py-3 text-center text-slate-400 text-xs bg-slate-50/50">-</td>
+                          <td className="py-3 text-center">{Number(s2.parkingQuantity) || 0}</td>
+                          <td className="py-3 text-right">{new Intl.NumberFormat('vi-VN').format(Number(s2.parkingUnitPrice))}</td>
+                          <td className="py-3 text-right font-semibold">{new Intl.NumberFormat('vi-VN').format((Number(s2.parkingQuantity) || 0) * Number(s2.parkingUnitPrice))}</td>
                         </tr>
                       )}
                       {Number(s2.otherPrice) > 0 && (
                         <tr>
-                          <td className="py-3 font-medium">Phụ thu khác</td>
+                          <td className="py-3 font-medium text-slate-700">Khác</td>
+                          <td className="py-3 text-center text-slate-400 text-xs bg-slate-50/50">-</td>
+                          <td className="py-3 text-center text-slate-400 text-xs bg-slate-50/50">-</td>
                           <td className="py-3 text-center">-</td>
                           <td className="py-3 text-right">-</td>
                           <td className="py-3 text-right font-semibold">{new Intl.NumberFormat('vi-VN').format(Number(s2.otherPrice))}</td>
@@ -531,10 +585,10 @@ export function CreateInvoiceModal({ isOpen, onOpenChange, contracts, onSuccess 
                   </div>
 
                   <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-6 bg-slate-50 p-6 rounded-xl border border-slate-200">
-                    <div className="w-32 h-32 bg-white rounded-lg border flex flex-col items-center justify-center p-1 shrink-0 overflow-hidden shadow-sm">
+                    <div className="w-48 h-48 bg-white rounded-lg border flex flex-col items-center justify-center p-1 shrink-0 overflow-hidden shadow-sm">
                       {selectedBank?.bankCode && selectedBank?.accountNumber ? (
                         <img 
-                          src={`https://img.vietqr.io/image/${selectedBank.bankCode}-${selectedBank.accountNumber}-compact2.png?amount=${calcTotal()}&addInfo=${encodeURIComponent(`Thanh toan tien nha P${selectedContract?.roomNumber}`)}&accountName=${encodeURIComponent(selectedBank.accountHolder || '')}`}
+                          src={`https://img.vietqr.io/image/${selectedBank.bankCode}-${selectedBank.accountNumber}-qr_only.png?amount=${calcTotal()}&addInfo=${encodeURIComponent(`Thanh toan tien nha P${selectedContract?.roomNumber}`)}&accountName=${encodeURIComponent(selectedBank.accountHolder || '')}`}
                           alt="VietQR"
                           className="w-full h-full object-contain"
                         />

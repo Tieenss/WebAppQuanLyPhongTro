@@ -16,7 +16,8 @@ const landlordLinks = [
 
 const tenantLinks = [
   { href: "/tenant/dashboard", label: "Home", icon: Home }, 
-  { href: "/tenant/contract", label: "Hợp đồng", icon: FileText }, 
+  { href: "/tenant/contract", label: "Hợp đồng", icon: FileText },
+  { href: "/tenant/invoices", label: "Hóa đơn", icon: ReceiptText },
   { href: "/tenant/issues", label: "Sự cố", icon: AlertTriangle }, 
   { href: "/tenant/chat", label: "Chat", icon: MessageSquare }, 
   { href: "/tenant/notifications", label: "Thông báo", icon: Bell }, 

@@ -81,32 +81,46 @@ export function ViewInvoiceModal({ isOpen, onOpenChange, invoice }: ViewInvoiceM
               <table className="w-full text-sm text-left border-collapse">
                 <thead className="bg-slate-50 text-slate-600 border-y border-slate-200">
                   <tr>
-                    <th className="px-4 py-3 font-semibold w-16">STT</th>
+                    <th className="px-4 py-3 font-semibold w-12">STT</th>
                     <th className="px-4 py-3 font-semibold">SẢN PHẨM</th>
-                    <th className="px-4 py-3 font-semibold text-center w-20">SL</th>
-                    <th className="px-4 py-3 font-semibold text-right w-32">ĐƠN GIÁ</th>
-                    <th className="px-4 py-3 font-semibold text-right w-40">THÀNH TIỀN</th>
+                    <th className="px-2 py-3 font-semibold text-center w-16">CŨ</th>
+                    <th className="px-2 py-3 font-semibold text-center w-16">MỚI</th>
+                    <th className="px-4 py-3 font-semibold text-center w-16">SL</th>
+                    <th className="px-4 py-3 font-semibold text-right w-28">ĐƠN GIÁ</th>
+                    <th className="px-4 py-3 font-semibold text-right w-32">THÀNH TIỀN</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
                   {(() => {
                     const items = [];
-                    if (invoice.roomPrice > 0) items.push({ name: 'Tiền phòng', qty: 1, price: invoice.roomPrice, total: invoice.roomPrice });
-                    if (invoice.electricityPrice > 0) items.push({ name: 'Tiền điện', qty: null, price: null, total: invoice.electricityPrice });
-                    if (invoice.waterPrice > 0) items.push({ name: 'Tiền nước', qty: null, price: null, total: invoice.waterPrice });
-                    if (invoice.servicePrice > 0) items.push({ name: 'Phí dịch vụ chung', qty: null, price: null, total: invoice.servicePrice });
-                    if (invoice.internetPrice > 0) items.push({ name: 'Phí Internet/Wifi', qty: null, price: null, total: invoice.internetPrice });
-                    if (invoice.cleaningPrice > 0) items.push({ name: 'Phí vệ sinh/rác', qty: null, price: null, total: invoice.cleaningPrice });
-                    if (invoice.parkingPrice > 0) items.push({ name: 'Phí giữ xe', qty: null, price: null, total: invoice.parkingPrice });
-                    if (invoice.otherPrice > 0) items.push({ name: 'Phụ thu khác', qty: null, price: null, total: invoice.otherPrice });
+                    if (invoice.roomPrice > 0) items.push({ name: 'Tiền phòng', oldIndex: null, newIndex: null, qty: 1, price: invoice.roomPrice, total: invoice.roomPrice });
+                    if (invoice.electricityPrice > 0) items.push({ 
+                      name: 'Tiền điện',
+                      oldIndex: invoice.oldElectricityIndex,
+                      newIndex: invoice.newElectricityIndex,
+                      qty: invoice.electricityUsage, price: invoice.electricityUnitPrice, total: invoice.electricityPrice 
+                    });
+                    if (invoice.waterPrice > 0) items.push({ 
+                      name: 'Tiền nước',
+                      oldIndex: invoice.oldWaterIndex,
+                      newIndex: invoice.newWaterIndex,
+                      qty: invoice.waterUsage, price: invoice.waterUnitPrice, total: invoice.waterPrice 
+                    });
+                    if (invoice.servicePrice > 0) items.push({ name: 'Phí dịch vụ chung', oldIndex: null, newIndex: null, qty: invoice.serviceQuantity, price: invoice.serviceUnitPrice, total: invoice.servicePrice });
+                    if (invoice.internetPrice > 0) items.push({ name: 'Phí Internet/Wifi', oldIndex: null, newIndex: null, qty: invoice.internetQuantity, price: invoice.internetUnitPrice, total: invoice.internetPrice });
+                    if (invoice.cleaningPrice > 0) items.push({ name: 'Phí vệ sinh/rác', oldIndex: null, newIndex: null, qty: invoice.cleaningQuantity, price: invoice.cleaningUnitPrice, total: invoice.cleaningPrice });
+                    if (invoice.parkingPrice > 0) items.push({ name: 'Phí giữ xe', oldIndex: null, newIndex: null, qty: invoice.parkingQuantity, price: invoice.parkingUnitPrice, total: invoice.parkingPrice });
+                    if (invoice.otherPrice > 0) items.push({ name: 'Phụ thu khác', oldIndex: null, newIndex: null, qty: null, price: null, total: invoice.otherPrice });
                     
                     return items.map((item, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50">
-                        <td className="px-4 py-3 text-slate-500">{idx + 1}</td>
+                      <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3 text-slate-400 text-sm font-medium">{idx + 1}</td>
                         <td className="px-4 py-3 font-medium">{item.name}</td>
-                        <td className="px-4 py-3 text-center">{item.qty !== null ? item.qty : '-'}</td>
-                        <td className="px-4 py-3 text-right">{item.price !== null ? new Intl.NumberFormat('vi-VN').format(item.price) : '-'}</td>
-                        <td className="px-4 py-3 text-right font-medium">{new Intl.NumberFormat('vi-VN').format(item.total)}</td>
+                        <td className="px-2 py-3 text-center text-slate-500 text-xs bg-slate-50/50">{item.oldIndex !== null && item.oldIndex !== undefined ? item.oldIndex : '-'}</td>
+                        <td className="px-2 py-3 text-center text-slate-500 text-xs bg-slate-50/50">{item.newIndex !== null && item.newIndex !== undefined ? item.newIndex : '-'}</td>
+                        <td className="px-4 py-3 text-center text-slate-600">{item.qty !== null ? item.qty : '-'}</td>
+                        <td className="px-4 py-3 text-right text-slate-600">{item.price !== null ? new Intl.NumberFormat('vi-VN').format(item.price) : '-'}</td>
+                        <td className="px-4 py-3 text-right font-semibold">{new Intl.NumberFormat('vi-VN').format(item.total)}</td>
                       </tr>
                     ));
                   })()}
@@ -147,10 +161,10 @@ export function ViewInvoiceModal({ isOpen, onOpenChange, invoice }: ViewInvoiceM
             {/* QR CODE & BANK INFO */}
             {invoice.status !== 'PAID' && (
               <div className="mt-12 flex items-center justify-center gap-8 bg-slate-50 p-6 rounded-xl border border-slate-200 print:break-inside-avoid">
-                <div className="w-32 h-32 bg-white rounded-lg border flex flex-col items-center justify-center p-1 shrink-0 overflow-hidden shadow-sm">
+                <div className="w-48 h-48 bg-white rounded-lg border flex flex-col items-center justify-center p-1 shrink-0 overflow-hidden shadow-sm">
                   {invoice.bankCode && invoice.bankAccountNumber ? (
                     <img 
-                      src={`https://img.vietqr.io/image/${invoice.bankCode}-${invoice.bankAccountNumber}-compact2.png?amount=${(invoice.totalAmount || 0) - (invoice.debtFromPreviousMonth || 0) + (invoice.discount || 0)}&addInfo=${encodeURIComponent(invoice.invoiceCode || `INV${invoice.id}`)}&accountName=${encodeURIComponent(invoice.bankAccountHolder || '')}`}
+                      src={`https://img.vietqr.io/image/${invoice.bankCode}-${invoice.bankAccountNumber}-qr_only.png?amount=${(invoice.totalAmount || 0) - (invoice.debtFromPreviousMonth || 0) + (invoice.discount || 0)}&addInfo=${encodeURIComponent(invoice.invoiceCode || `INV${invoice.id}`)}&accountName=${encodeURIComponent(invoice.bankAccountHolder || '')}`}
                       alt="VietQR"
                       className="w-full h-full object-contain"
                     />
@@ -179,6 +193,18 @@ export function ViewInvoiceModal({ isOpen, onOpenChange, invoice }: ViewInvoiceM
                     <span className="w-24 text-slate-500">Nội dung:</span>
                     <span className="font-semibold text-slate-800">{invoice.invoiceCode || `INV${invoice.id}`}</span>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* PAYMENT RECEIPT */}
+            {invoice.paymentImageUrl && (
+              <div className="mt-8 border-t border-slate-200 pt-6 print:break-inside-avoid">
+                <h3 className="font-bold text-slate-800 mb-4 flex items-center">
+                  <span className="w-1.5 h-4 bg-emerald-500 rounded-full mr-2"></span>Biên lai thanh toán
+                </h3>
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-center">
+                  <img src={invoice.paymentImageUrl} alt="Biên lai" className="max-w-full max-h-96 rounded-lg shadow-sm object-contain" />
                 </div>
               </div>
             )}

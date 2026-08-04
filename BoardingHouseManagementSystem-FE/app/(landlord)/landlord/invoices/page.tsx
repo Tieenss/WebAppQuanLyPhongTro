@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Search, Filter, MoreVertical, FileText, CheckCircle2, ArrowLeft, Eye, Printer, Trash2 } from "lucide-react";
+import { Plus, Search, Filter, MoreVertical, FileText, CheckCircle2, ArrowLeft, Eye, Printer, Trash2, X } from "lucide-react";
 import { CreateInvoiceModal } from "@/components/invoices/CreateInvoiceModal";
 import { ViewInvoiceModal } from "@/components/invoices/ViewInvoiceModal";
 import Link from "next/link";
@@ -42,6 +42,18 @@ export default function InvoicesPage() {
         mutate('/invoices');
       } catch (error) {
         toast.error("Không thể xóa hóa đơn.");
+      }
+    }
+  };
+
+  const handleRejectInvoice = async (id: number) => {
+    if (window.confirm("Bạn có chắc chắn muốn từ chối biên lai này? Người thuê sẽ phải nộp lại biên lai khác.")) {
+      try {
+        await apiClient.put(`/invoices/${id}/reject`, {});
+        toast.success("Đã từ chối biên lai thành công!");
+        mutate('/invoices');
+      } catch (error) {
+        toast.error("Không thể từ chối biên lai.");
       }
     }
   };
@@ -124,7 +136,7 @@ export default function InvoicesPage() {
                   </td>
                 </tr>
               ) : (
-                filteredInvoices.map((inv) => (
+                filteredInvoices.map((inv: any) => (
                   <tr key={inv.id} className="hover:bg-slate-50/80 transition-colors group">
                     <td className="px-6 py-4 whitespace-nowrap font-semibold text-slate-900">
                       {inv.invoiceCode || `#INV-${inv.id}`}
@@ -149,6 +161,10 @@ export default function InvoicesPage() {
                         <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           <span>Đã thanh toán</span>
+                        </span>
+                      ) : inv.status === "PENDING" && inv.paymentImageUrl ? (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                          Chờ xác nhận
                         </span>
                       ) : inv.status === "UNPAID" || inv.status === "PENDING" ? (
                         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
@@ -206,6 +222,15 @@ export default function InvoicesPage() {
                                 >
                                   <CheckCircle2 className="w-4 h-4 mr-2.5 text-emerald-500" />
                                   Xác nhận thu tiền
+                                </DropdownMenu.Item>
+                              )}
+                              {inv.status === "PENDING" && inv.paymentImageUrl && (
+                                <DropdownMenu.Item 
+                                  onSelect={() => handleRejectInvoice(inv.id)}
+                                  className="px-4 py-2.5 text-sm font-medium text-amber-700 hover:bg-amber-50 transition-colors flex items-center outline-none cursor-pointer"
+                                >
+                                  <X className="w-4 h-4 mr-2.5 text-amber-500" />
+                                  Từ chối biên lai
                                 </DropdownMenu.Item>
                               )}
                               <DropdownMenu.Separator className="h-px bg-slate-100 my-1" />

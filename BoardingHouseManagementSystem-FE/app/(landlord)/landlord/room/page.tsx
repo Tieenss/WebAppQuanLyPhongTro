@@ -321,7 +321,7 @@ export default function RoomsPage() {
       </div>
 
       <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <PanelGroup direction="horizontal" className="w-full h-full flex">
+        <PanelGroup orientation="horizontal" className="w-full h-full flex">
           
           {/* CỘT TRÁI: DANH SÁCH */}
           <Panel defaultSize={65} minSize={30} className="w-full md:w-2/3 flex flex-col border-r border-slate-100 bg-slate-50/30">
