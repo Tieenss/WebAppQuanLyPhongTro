@@ -56,7 +56,7 @@ export default function LandlordIssuesPage() {
   };
 
   const filteredIssues = issues.filter(
-    (issue) =>
+    (issue: Issue) =>
       issue.roomNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       issue.tenantName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       issue.issueType?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -148,7 +148,7 @@ export default function LandlordIssuesPage() {
                   <td colSpan={6} className="px-6 py-10 text-center text-slate-500">Không tìm thấy sự cố nào.</td>
                 </tr>
               ) : (
-                filteredIssues.map((issue) => (
+                filteredIssues.map((issue: Issue) => (
                   <tr key={issue.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="font-medium text-slate-900">Phòng {issue.roomNumber}</div>

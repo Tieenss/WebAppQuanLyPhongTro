@@ -121,7 +121,7 @@ public class AuthController {
                 .fullName(registerRequest.getFullName() != null ? registerRequest.getFullName() : registerRequest.getUsername())
                 .phone(registerRequest.getPhone())
                 .email(registerRequest.getEmail())
-                .role(registerRequest.getRole() != null ? registerRequest.getRole().toUpperCase() : "LANDLORD")
+                .role("LANDLORD")
                 .build();
                 
         User savedUser = userRepository.save(newUser);

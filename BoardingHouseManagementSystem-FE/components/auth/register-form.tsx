@@ -88,23 +88,7 @@ export function RegisterForm() {
       <div className="w-full bg-white lg:bg-transparent lg:p-0 rounded-[2rem] shadow-xl lg:shadow-none p-8">
         <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)}>
           
-          {/* Lựa chọn Vai trò */}
-          <div className="grid grid-cols-2 gap-4 pb-2">
-            <label className={`cursor-pointer flex items-center justify-center space-x-2 py-3 rounded-2xl border-2 transition-all ${
-              form.watch("role") === "LANDLORD" ? "border-primary bg-sky-50 text-primary" : "border-slate-100 text-slate-500 hover:bg-slate-50"
-            }`}>
-              <input type="radio" value="LANDLORD" className="hidden" {...form.register("role")} />
-              <ShieldCheck size={18} />
-              <span className="font-semibold text-sm">Chủ trọ</span>
-            </label>
-            <label className={`cursor-pointer flex items-center justify-center space-x-2 py-3 rounded-2xl border-2 transition-all ${
-              form.watch("role") === "TENANT" ? "border-primary bg-sky-50 text-primary" : "border-slate-100 text-slate-500 hover:bg-slate-50"
-            }`}>
-              <input type="radio" value="TENANT" className="hidden" {...form.register("role")} />
-              <User size={18} />
-              <span className="font-semibold text-sm">Khách thuê</span>
-            </label>
-          </div>
+
 
           <div className="grid grid-cols-2 gap-4">
              {/* Nhập Họ và tên */}

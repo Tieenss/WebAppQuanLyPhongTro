@@ -46,7 +46,7 @@ export default function ManagementDashboardPage() {
 
   const displayedBuildings = useMemo(() => {
     if (managedBuildings.length === 0) return "Chưa có nhà trọ nào";
-    const names = managedBuildings.map(b => b.name);
+    const names = managedBuildings.map((b: any) => b.name);
     if (names.length <= 2) return names.join(", ");
     return `${names.slice(0, 2).join(", ")} và ${names.length - 2} nhà trọ khác`;
   }, [managedBuildings]);
@@ -75,7 +75,7 @@ export default function ManagementDashboardPage() {
               Đang quản lý: {" "}
               <span 
                 className="text-white font-bold cursor-help border-b border-dashed border-white/40 pb-0.5 hover:border-white transition-colors" 
-                title={managedBuildings.map(b => b.name).join("\n")}
+                title={managedBuildings.map((b: any) => b.name).join("\n")}
               >
                 {displayedBuildings}
               </span>

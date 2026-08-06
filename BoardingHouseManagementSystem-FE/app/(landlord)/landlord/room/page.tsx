@@ -114,8 +114,8 @@ export default function RoomsPage() {
 
   const filteredRooms = useMemo(() => {
     return rooms.filter(r => {
-      const roomName = r.name || r.roomNumber || "";
-      const roomCode = r.code || r.roomNumber || "";
+      const roomName = r.name || (r as any).roomNumber || "";
+      const roomCode = r.code || (r as any).roomNumber || "";
       const matchSearch = roomName.toLowerCase().includes(search.toLowerCase()) || roomCode.toLowerCase().includes(search.toLowerCase());
       const matchStatus = filterStatus === "Tất cả" || r.status === filterStatus;
       const matchBuilding = filterBuilding === "Tất cả" || r.building === filterBuilding;
@@ -194,13 +194,13 @@ export default function RoomsPage() {
         const buildingId = buildingsList.find(b => b.name === editForm.building)?.id;
         const payload = {
           buildingId: buildingId ? parseInt(buildingId) : null,
-          roomNumber: editForm.name.replace("Phòng ", "") || editForm.code,
+          roomNumber: (editForm.name || "").replace("Phòng ", "") || editForm.code,
           price: editForm.rentPrice,
-          area: parseFloat(editForm.area.replace("m2", "")) || 0,
+          area: parseFloat((editForm.area || "").replace("m2", "")) || 0,
           maxOccupants: editForm.maxOccupancy,
           status: editForm.status === 'Trống' ? 'available' : editForm.status === 'Đã thuê' ? 'rented' : 'maintenance',
           description: editForm.description,
-          amenities: editForm.amenities.join(', ')
+          amenities: (editForm.amenities || []).join(', ')
         };
 
         const res = await apiClient.post('/rooms', payload);
@@ -208,26 +208,26 @@ export default function RoomsPage() {
           ...editForm,
           id: res.data?.id?.toString() || res.data?.data?.id?.toString()
         };
-        savedRoom = mappedRoom;
+        savedRoom = mappedRoom as Room;
         toast.success("Thêm mới thành công!");
       } else {
         const buildingId = buildingsList.find(b => b.name === editForm.building)?.id;
         const payload = {
           buildingId: buildingId ? parseInt(buildingId) : null,
-          roomNumber: editForm.name.replace("Phòng ", "") || editForm.code,
+          roomNumber: (editForm.name || "").replace("Phòng ", "") || editForm.code,
           price: editForm.rentPrice,
-          area: parseFloat(editForm.area.replace("m2", "")) || 0,
+          area: parseFloat((editForm.area || "").replace("m2", "")) || 0,
           maxOccupants: editForm.maxOccupancy,
           status: editForm.status === 'Trống' ? 'available' : editForm.status === 'Đã thuê' ? 'rented' : 'maintenance',
           description: editForm.description,
-          amenities: editForm.amenities.join(', ')
+          amenities: (editForm.amenities || []).join(', ')
         };
 
         const res = await apiClient.put(`/rooms/${selectedId}`, payload);
         const mappedRoom = {
           ...editForm
         };
-        savedRoom = mappedRoom;
+        savedRoom = mappedRoom as Room;
         toast.success("Cập nhật thành công!");
       }
 

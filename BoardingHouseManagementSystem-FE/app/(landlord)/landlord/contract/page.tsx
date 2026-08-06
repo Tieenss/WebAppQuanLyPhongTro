@@ -151,8 +151,8 @@ export default function ContractsPage() {
 
     const enhancedContract = {
       ...contract,
-      area: room?.area || "",
-      leaseDuration: duration > 0 ? duration : (contract.leaseDuration || "")
+      area: room?.area || undefined,
+      leaseDuration: duration > 0 ? duration : contract.leaseDuration
     };
 
     setSelectedContract(enhancedContract);

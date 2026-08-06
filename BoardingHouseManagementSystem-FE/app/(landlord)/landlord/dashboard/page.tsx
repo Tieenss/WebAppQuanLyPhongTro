@@ -131,7 +131,7 @@ export default function LandlordDashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-6">
+            <div className="space-y-6 max-h-[350px] overflow-y-auto pr-2">
               {data.activities.length === 0 ? (
                  <p className="text-sm text-slate-500 italic">Chưa có hoạt động nào được ghi nhận.</p>
               ) : (
