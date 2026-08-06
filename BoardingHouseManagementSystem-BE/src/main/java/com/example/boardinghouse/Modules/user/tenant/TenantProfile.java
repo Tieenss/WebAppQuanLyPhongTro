@@ -29,6 +29,9 @@ public class TenantProfile {
     @Column(name = "cccd_number", nullable = false, length = 20)
     private String cccdNumber;
 
+    @Column(name = "cccd_place", length = 150)
+    private String cccdPlace;
+
     @Column(name = "cccd_front_img", length = 500)
     private String cccdFrontImg;
 

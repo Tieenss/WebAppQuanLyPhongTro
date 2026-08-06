@@ -23,6 +23,7 @@ public class ProfileResponse {
 
     // Tenant specific fields
     private String cccdNumber;
+    private String cccdPlace;
     private String cccdFrontImg;
     private String cccdBackImg;
     private Boolean isActive;

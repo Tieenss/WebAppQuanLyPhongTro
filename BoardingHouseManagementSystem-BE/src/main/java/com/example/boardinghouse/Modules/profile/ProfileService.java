@@ -49,10 +49,13 @@ public class ProfileService {
                 builder.bankName(lp.getBankName());
                 builder.bankAccountNumber(lp.getBankAccountNumber());
                 builder.bankAccountHolder(lp.getBankAccountHolder());
+                builder.cccdNumber(lp.getCccdNumber());
+                builder.cccdPlace(lp.getCccdPlace());
             });
         } else if ("TENANT".equalsIgnoreCase(user.getRole())) {
             tenantProfileRepository.findByUserId(userId).ifPresent(tp -> {
                 builder.cccdNumber(tp.getCccdNumber());
+                builder.cccdPlace(tp.getCccdPlace());
                 builder.cccdFrontImg(tp.getCccdFrontImg());
                 builder.cccdBackImg(tp.getCccdBackImg());
                 builder.isActive(tp.getIsActive());
@@ -93,6 +96,8 @@ public class ProfileService {
             if (request.getBankName() != null) lp.setBankName(request.getBankName());
             if (request.getBankAccountNumber() != null) lp.setBankAccountNumber(request.getBankAccountNumber());
             if (request.getBankAccountHolder() != null) lp.setBankAccountHolder(request.getBankAccountHolder());
+            if (request.getCccdNumber() != null) lp.setCccdNumber(request.getCccdNumber());
+            if (request.getCccdPlace() != null) lp.setCccdPlace(request.getCccdPlace());
             
             // Set defaults for non-nullable fields if they are still null (for new profiles)
             if (lp.getBusinessName() == null) lp.setBusinessName(savedUser.getFullName() != null ? savedUser.getFullName() : "");
@@ -112,6 +117,7 @@ public class ProfileService {
                     });
             
             if (request.getCccdNumber() != null) tp.setCccdNumber(request.getCccdNumber());
+            if (request.getCccdPlace() != null) tp.setCccdPlace(request.getCccdPlace());
             if (request.getCccdFrontImg() != null) tp.setCccdFrontImg(request.getCccdFrontImg());
             if (request.getCccdBackImg() != null) tp.setCccdBackImg(request.getCccdBackImg());
             

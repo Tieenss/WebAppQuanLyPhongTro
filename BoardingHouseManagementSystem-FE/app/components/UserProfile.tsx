@@ -256,6 +256,26 @@ export default function UserProfile() {
                     />
                   </div>
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Số CMND/CCCD</label>
+                  <input
+                    type="text"
+                    name="cccdNumber"
+                    value={profile.cccdNumber || ""}
+                    onChange={handleInputChange}
+                    className="block w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-slate-50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Nơi cấp</label>
+                  <input
+                    type="text"
+                    name="cccdPlace"
+                    value={profile.cccdPlace || ""}
+                    onChange={handleInputChange}
+                    className="block w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-slate-50"
+                  />
+                </div>
               </div>
             </section>
 
@@ -265,30 +285,8 @@ export default function UserProfile() {
                 <section>
                   <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">
                     <Building2 className="w-5 h-5 text-indigo-500" />
-                    Thông tin Kinh doanh
+                    Thông tin kinh doanh
                   </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Số CMND/CCCD:</label>
-                      <input
-                        type="text"
-                        name="cccdNumber"
-                        value={profile.cccdNumber || ""}
-                        onChange={handleInputChange}
-                        className="block w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-slate-50"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Nơi cấp:</label>
-                      <input
-                        type="text"
-                        name="cccdPlace"
-                        value={profile.cccdPlace || ""}
-                        onChange={handleInputChange}
-                        className="block w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-slate-50"
-                      />
-                    </div>
-                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Tên Doanh nghiệp / Hộ KD</label>

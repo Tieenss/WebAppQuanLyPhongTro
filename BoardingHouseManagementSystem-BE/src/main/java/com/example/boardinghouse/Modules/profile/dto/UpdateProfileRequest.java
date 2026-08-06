@@ -22,6 +22,7 @@ public class UpdateProfileRequest {
     // Tenant specific fields
     @Pattern(regexp = "^\\d{10,12}$", message = "CCCD/CMND phải có từ 10 đến 12 chữ số")
     private String cccdNumber;
+    private String cccdPlace;
     private String cccdFrontImg;
     private String cccdBackImg;
 }
