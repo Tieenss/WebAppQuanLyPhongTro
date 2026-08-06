@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FileText, Key, CheckCircle, Download } from "lucide-react";
+import { FileText, Key, CheckCircle, Download, Eye, User, Home, Receipt, Info, Zap, Droplets, Wifi, Car, Wallet, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import apiClient from "@/lib/apiClient";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
@@ -124,6 +125,100 @@ export default function TenantContractPage() {
                            Đã kết thúc
                          </span>
                       )}
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" className="rounded-full bg-white text-primary hover:bg-blue-50 border-primary">
+                            <Eye className="w-4 h-4 mr-2" />
+                            Xem chi tiết
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle className="text-2xl font-bold text-slate-800 border-b pb-4">
+                              Chi tiết hợp đồng - Phòng {c.roomNumber}
+                            </DialogTitle>
+                          </DialogHeader>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                            {/* Landlord Info */}
+                            <div className="space-y-3">
+                              <h3 className="font-semibold text-slate-700 flex items-center gap-2"><User className="w-5 h-5 text-primary"/> Đại diện bên A (Chủ trọ)</h3>
+                              <div className="bg-slate-50 p-4 rounded-xl space-y-2 text-sm border border-slate-100">
+                                <p><span className="text-slate-500">Họ tên:</span> <span className="font-medium">{c.landlordName || "Chưa cập nhật"}</span></p>
+                                <p><span className="text-slate-500">Số điện thoại:</span> <span className="font-medium">{c.landlordPhone || "Chưa cập nhật"}</span></p>
+                                <p><span className="text-slate-500">CCCD/CMND:</span> <span className="font-medium">{c.landlordCccd || "Chưa cập nhật"}</span></p>
+                                <p><span className="text-slate-500">Nơi cấp:</span> <span className="font-medium">{c.landlordCccdPlace || "Chưa cập nhật"}</span></p>
+                              </div>
+                            </div>
+                            
+                            {/* Tenant Info */}
+                            <div className="space-y-3">
+                              <h3 className="font-semibold text-slate-700 flex items-center gap-2"><User className="w-5 h-5 text-green-600"/> Đại diện bên B (Người thuê)</h3>
+                              <div className="bg-green-50/50 p-4 rounded-xl space-y-2 text-sm border border-green-100">
+                                <p><span className="text-slate-500">Họ tên:</span> <span className="font-medium">{c.tenantName || "Chưa cập nhật"}</span></p>
+                                <p><span className="text-slate-500">Số điện thoại:</span> <span className="font-medium">{c.tenantPhone || "Chưa cập nhật"}</span></p>
+                                <p><span className="text-slate-500">CCCD/CMND:</span> <span className="font-medium">{c.tenantCccd || "Chưa cập nhật"}</span></p>
+                                <p><span className="text-slate-500">Nơi cấp:</span> <span className="font-medium">{c.tenantCccdPlace || "Chưa cập nhật"}</span></p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Contract Details */}
+                          <div className="space-y-3 mt-4">
+                            <h3 className="font-semibold text-slate-700 flex items-center gap-2"><Receipt className="w-5 h-5 text-blue-500"/> Chi tiết phí & Dịch vụ</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              <div className="bg-white border border-slate-100 p-3 rounded-xl shadow-sm text-center">
+                                <Home className="w-5 h-5 mx-auto text-slate-400 mb-2"/>
+                                <p className="text-xs text-slate-500">Giá thuê/tháng</p>
+                                <p className="font-semibold text-primary">{c.rentalPrice?.toLocaleString()}đ</p>
+                              </div>
+                              <div className="bg-white border border-slate-100 p-3 rounded-xl shadow-sm text-center">
+                                <Wallet className="w-5 h-5 mx-auto text-slate-400 mb-2"/>
+                                <p className="text-xs text-slate-500">Tiền cọc</p>
+                                <p className="font-semibold text-primary">{c.deposit?.toLocaleString()}đ</p>
+                              </div>
+                              <div className="bg-white border border-slate-100 p-3 rounded-xl shadow-sm text-center">
+                                <Zap className="w-5 h-5 mx-auto text-yellow-500 mb-2"/>
+                                <p className="text-xs text-slate-500">Tiền điện</p>
+                                <p className="font-semibold text-slate-700">{c.electricityPrice?.toLocaleString()}đ/kwh</p>
+                              </div>
+                              <div className="bg-white border border-slate-100 p-3 rounded-xl shadow-sm text-center">
+                                <Droplets className="w-5 h-5 mx-auto text-blue-400 mb-2"/>
+                                <p className="text-xs text-slate-500">Tiền nước</p>
+                                <p className="font-semibold text-slate-700">{c.waterPrice?.toLocaleString()}đ/khối</p>
+                              </div>
+                              <div className="bg-white border border-slate-100 p-3 rounded-xl shadow-sm text-center">
+                                <Wifi className="w-5 h-5 mx-auto text-slate-400 mb-2"/>
+                                <p className="text-xs text-slate-500">Tiền Wifi</p>
+                                <p className="font-semibold text-slate-700">{c.wifiPrice?.toLocaleString()}đ</p>
+                              </div>
+                              <div className="bg-white border border-slate-100 p-3 rounded-xl shadow-sm text-center">
+                                <Car className="w-5 h-5 mx-auto text-slate-400 mb-2"/>
+                                <p className="text-xs text-slate-500">Gửi xe</p>
+                                <p className="font-semibold text-slate-700">{c.parkingPrice?.toLocaleString()}đ</p>
+                              </div>
+                              <div className="bg-white border border-slate-100 p-3 rounded-xl shadow-sm text-center">
+                                <Info className="w-5 h-5 mx-auto text-slate-400 mb-2"/>
+                                <p className="text-xs text-slate-500">Dịch vụ chung</p>
+                                <p className="font-semibold text-slate-700">{c.servicePrice?.toLocaleString()}đ</p>
+                              </div>
+                              <div className="bg-white border border-slate-100 p-3 rounded-xl shadow-sm text-center">
+                                <Calendar className="w-5 h-5 mx-auto text-slate-400 mb-2"/>
+                                <p className="text-xs text-slate-500">Ngày thu tiền</p>
+                                <p className="font-semibold text-slate-700">Ngày {c.paymentDate} hằng tháng</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-4 space-y-3">
+                            <h3 className="font-semibold text-slate-700 flex items-center gap-2"><Info className="w-5 h-5 text-purple-500"/> Tài sản bàn giao</h3>
+                            <div className="bg-slate-50 p-4 rounded-xl text-sm whitespace-pre-wrap border border-slate-100 text-slate-600">
+                              {c.assets || "Không có ghi chú tài sản bàn giao"}
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+
                       <Button variant="outline" onClick={() => window.alert("Chức năng tải PDF đang hoàn thiện")} className="rounded-full bg-white">
                         <Download className="w-4 h-4 mr-2" />
                         Tải PDF

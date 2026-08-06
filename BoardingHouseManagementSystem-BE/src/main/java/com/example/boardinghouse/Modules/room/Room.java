@@ -35,7 +35,7 @@ public class Room {
     private Integer maxOccupants;
 
     @Column(nullable = false)
-    private String status = "available"; // Trạng thái: available, rented, maintenance
+    private String status = "available"; // Trạng thái: trống, đã thuê, bảo trì
 
     @Column(columnDefinition = "TEXT")
     private String description;

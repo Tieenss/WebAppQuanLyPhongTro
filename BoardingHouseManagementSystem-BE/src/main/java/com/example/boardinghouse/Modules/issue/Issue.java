@@ -26,11 +26,15 @@ public class Issue {
     private Room room;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", nullable = false)
+    @JoinColumn(name = "tenant_id", nullable = true)
     private User tenant;
 
     @Column(name = "issue_type", nullable = false, length = 50)
     private String issueType;
+
+    @Column(name = "title", nullable = false, length = 255)
+    @Builder.Default
+    private String title = "Báo cáo sự cố";
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String description;

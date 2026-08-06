@@ -30,4 +30,16 @@ public class Building {
 
     @Column(columnDefinition = "TEXT")
     private String amenities;
+
+    @Column(length = 200)
+    private String owner;
+
+    @Column(name = "total_rooms")
+    private Integer totalRooms;
+
+    @Column(length = 50)
+    private String status;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
 }

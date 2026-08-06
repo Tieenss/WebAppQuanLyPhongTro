@@ -49,6 +49,8 @@ export default function ContractsPage() {
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [filterBuilding, setFilterBuilding] = useState("Tất cả");
+  const [filterStatus, setFilterStatus] = useState("Tất cả");
   const [editForm, setEditForm] = useState<any>({});
 
   const [buildings, setBuildings] = useState<any[]>([]);
@@ -68,20 +70,26 @@ export default function ContractsPage() {
       
       let duration = 0;
       if (first.startDate && first.endDate) {
-        const d1 = new Date(first.startDate);
-        const d2 = new Date(first.endDate);
+        const parseLocal = (dateStr: string) => {
+          if (!dateStr || !dateStr.includes('-')) return new Date();
+          const [year, month, day] = dateStr.split('T')[0].split('-').map(Number);
+          return new Date(year, month - 1, day);
+        };
+        const d1 = parseLocal(first.startDate);
+        const d2 = parseLocal(first.endDate);
         duration = (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
       }
       
       const enhancedContract = {
         ...first,
         area: room?.area || "",
-        leaseDuration: duration > 0 ? duration : ""
+        leaseDuration: Number(first.leaseDuration) || duration
       };
 
       setSelectedContract(enhancedContract);
       setEditForm(enhancedContract);
       
+      // Tìm phòng và toà nhà cho hợp đồng này để gán selectedBuildingId nếu có thể
       if (room && room.building?.id) {
         setSelectedBuildingId(room.building.id.toString());
       }
@@ -121,15 +129,20 @@ export default function ContractsPage() {
     
     let duration = 0;
     if (contract.startDate && contract.endDate) {
-      const d1 = new Date(contract.startDate);
-      const d2 = new Date(contract.endDate);
+      const parseLocal = (dateStr: string) => {
+        if (!dateStr || !dateStr.includes('-')) return new Date();
+        const [year, month, day] = dateStr.split('T')[0].split('-').map(Number);
+        return new Date(year, month - 1, day);
+      };
+      const d1 = parseLocal(contract.startDate);
+      const d2 = parseLocal(contract.endDate);
       duration = (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
     }
 
     const enhancedContract = {
       ...contract,
       area: room?.area || "",
-      leaseDuration: duration > 0 ? duration : ""
+      leaseDuration: duration > 0 ? duration : (contract.leaseDuration || "")
     };
 
     setSelectedContract(enhancedContract);
@@ -137,7 +150,7 @@ export default function ContractsPage() {
     setIsCreating(false);
     setEditForm(enhancedContract);
     
-    // Find room and building for this contract to set selectedBuildingId if possible
+    // Tìm phòng và toà nhà cho hợp đồng này để gán selectedBuildingId nếu có thể
     if (room && room.building?.id) {
       setSelectedBuildingId(room.building.id.toString());
     }
@@ -218,39 +231,81 @@ export default function ContractsPage() {
       }
       
       fetchContracts();
-      handleRowClick(savedContract);
-    } catch (error) {
+      handleRowClick({
+        ...savedContract,
+        leaseDuration: editForm.leaseDuration,
+        area: editForm.area
+      });
+    } catch (error: any) {
       console.error(error);
-      toast.error("Có lỗi xảy ra khi lưu hợp đồng.");
+      const msg = error.response?.data?.message;
+      if (!msg) {
+        toast.error("Có lỗi xảy ra khi lưu hợp đồng.");
+      }
     }
   };
 
-  const filteredContracts = contracts.filter((c) =>
-    c.contractCode?.toLowerCase().includes(search.toLowerCase()) ||
-    c.roomNumber?.toLowerCase().includes(search.toLowerCase()) ||
-    c.tenantName?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredContracts = contracts.filter((c) => {
+    const matchesSearch = c.contractCode?.toLowerCase().includes(search.toLowerCase()) ||
+      c.roomNumber?.toLowerCase().includes(search.toLowerCase()) ||
+      c.tenantName?.toLowerCase().includes(search.toLowerCase());
+
+    let matchesBuilding = true;
+    if (filterBuilding !== "Tất cả") {
+      const room = rooms.find(r => r.roomNumber === c.roomNumber || r.id?.toString() === c.roomNumber);
+      const buildingName = room?.buildingName || (typeof room?.building === 'object' ? room?.building?.name : room?.building);
+      matchesBuilding = buildingName === filterBuilding;
+    }
+
+    let matchesStatus = true;
+    if (filterStatus !== "Tất cả") {
+      matchesStatus = c.status === filterStatus;
+    }
+
+    return matchesSearch && matchesBuilding && matchesStatus;
+  });
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] md:h-screen -m-4 sm:-m-6">
-      <PanelGroup direction="horizontal" className="flex-1 flex overflow-hidden">
-        {/* CỘT TRÁI: DANH SÁCH HỢP ĐỒNG */}
-        <Panel defaultSize={65} minSize={30} className="w-full md:w-2/3 flex flex-col border-r bg-slate-50/50 relative">
-          
-          <div className="p-4 md:p-6 border-b bg-white">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-              <div className="flex items-center gap-3">
-                <Link href="/landlord/management" className="text-slate-400 hover:text-blue-600 transition-colors">
-                  <ArrowLeft className="w-6 h-6" />
-                </Link>
-                <h1 className="text-2xl font-bold text-slate-800">Quản lý hợp đồng</h1>
-              </div>
-              <Button onClick={handleCreate} className="bg-blue-600 hover:bg-blue-700">
-                <Plus className="w-4 h-4 mr-2" /> Thêm hợp đồng
-              </Button>
-            </div>
+    <div className="p-4 sm:p-6 w-full flex flex-col h-[calc(100vh-4rem)] md:h-[calc(100vh-6rem)]">
+      {/* Header section */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex items-start sm:items-center gap-3">
+          <Link href="/landlord/management" className="text-slate-400 hover:text-blue-600 transition-colors mt-1 sm:mt-0">
+            <ArrowLeft className="w-6 h-6" />
+          </Link>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Quản lý Hợp đồng</h1>
+            <p className="mt-1 text-sm text-slate-500">Quản lý danh sách hợp đồng thuê phòng, thời hạn và trạng thái.</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-slate-600 hidden sm:inline-block">Tòa nhà:</span>
+            <select
+              className="h-10 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 shadow-sm"
+              value={filterBuilding}
+              onChange={e => setFilterBuilding(e.target.value)}
+            >
+              <option value="Tất cả">Tất cả tòa nhà</option>
+              {buildings.map(b => (
+                <option key={b.id} value={b.name}>{b.name}</option>
+              ))}
+            </select>
+          </div>
+          <button onClick={handleCreate} className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 shrink-0">
+            <Plus className="w-5 h-5" />
+            <span className="hidden sm:inline">Thêm hợp đồng</span>
+          </button>
+        </div>
+      </div>
 
-            <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <PanelGroup orientation="horizontal" className="w-full h-full flex">
+          {/* CỘT TRÁI: DANH SÁCH HỢP ĐỒNG */}
+          <Panel defaultSize={65} minSize={30} className="w-full md:w-2/3 flex flex-col border-r border-slate-100 bg-slate-50/30 relative">
+            
+            <div className="p-4 md:p-5 border-b border-slate-100 bg-white">
+              <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input 
@@ -261,11 +316,14 @@ export default function ContractsPage() {
                 />
               </div>
               <div className="w-full sm:w-auto flex gap-2">
-                <select className="w-full sm:w-40 h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600">
-                  <option>Hạn hợp đồng</option>
-                </select>
-                <select className="w-full sm:w-40 h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600">
-                  <option>Trạng thái</option>
+                <select 
+                  className="w-full sm:w-40 h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                  value={filterStatus}
+                  onChange={e => setFilterStatus(e.target.value)}
+                >
+                  <option value="Tất cả">Trạng thái (Tất cả)</option>
+                  <option value="active">Hoạt động</option>
+                  <option value="expired">Hết hạn</option>
                 </select>
               </div>
             </div>
@@ -361,7 +419,7 @@ export default function ContractsPage() {
 
               <div className="space-y-6">
                 
-                {/* General Info */}
+                {/* Thông tin chung */}
                 <div className="grid grid-cols-[120px_1fr] items-center gap-y-3">
                   <label className="text-sm font-medium text-slate-700">Mã HD:</label>
                   <Input 
@@ -380,8 +438,8 @@ export default function ContractsPage() {
                   >
                     <option value="all">Tất cả</option>
                     {buildings.map(b => (
-                      <option key={b.id} value={b.id}>{b.name}</option>
-                    ))}
+                    <option key={b.id} value={b.name}>{b.name}</option>
+                  ))}
                   </select>
 
                   <label className="text-sm font-medium text-slate-700">Phòng:</label>
@@ -407,6 +465,7 @@ export default function ContractsPage() {
                       <ul className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                         {rooms
                           .filter(r => selectedBuildingId === "all" || r.building?.id?.toString() === selectedBuildingId)
+                          .filter(r => !contracts.some(c => c.status === "active" && (c.roomNumber === r.roomNumber || c.roomNumber === r.id?.toString())))
                           .filter(r => (r.roomNumber || r.name || r.id).toLowerCase().includes((editForm.roomNumber || "").toLowerCase()))
                           .map(r => (
                           <li
@@ -420,7 +479,7 @@ export default function ContractsPage() {
                             {r.name || r.roomNumber}
                           </li>
                         ))}
-                        {rooms.filter(r => selectedBuildingId === "all" || r.building?.id?.toString() === selectedBuildingId).filter(r => (r.roomNumber || r.name || r.id).toLowerCase().includes((editForm.roomNumber || "").toLowerCase())).length === 0 && (
+                        {rooms.filter(r => selectedBuildingId === "all" || r.building?.id?.toString() === selectedBuildingId).filter(r => !contracts.some(c => c.status === "active" && (c.roomNumber === r.roomNumber || c.roomNumber === r.id?.toString()))).filter(r => (r.roomNumber || r.name || r.id).toLowerCase().includes((editForm.roomNumber || "").toLowerCase())).length === 0 && (
                           <li className="relative cursor-default select-none py-2 pl-3 pr-9 text-slate-500">
                             Không tìm thấy phòng
                           </li>
@@ -447,7 +506,7 @@ export default function ContractsPage() {
                   />
                 </div>
 
-                {/* Landlord Info */}
+                {/* Thông tin chủ trọ */}
                 <div>
                   <h3 className="font-semibold text-slate-800 mb-3">Thông tin chủ trọ</h3>
                   <div className="grid grid-cols-[120px_1fr] items-center gap-y-3">
@@ -486,7 +545,7 @@ export default function ContractsPage() {
                   </div>
                 </div>
 
-                {/* Tenant Info */}
+                {/* Thông tin người thuê */}
                 <div>
                   <h3 className="font-semibold text-slate-800 mb-3">Thông tin người thuê</h3>
                   <div className="grid grid-cols-[120px_1fr] items-center gap-y-3">
@@ -525,7 +584,7 @@ export default function ContractsPage() {
                   </div>
                 </div>
 
-                {/* Duration */}
+                {/* Thời hạn */}
                 <div>
                   <h3 className="font-semibold text-slate-800 mb-3">Thời hạn hợp đồng</h3>
                   <div className="grid grid-cols-[120px_1fr] items-center gap-y-3">
@@ -581,7 +640,7 @@ export default function ContractsPage() {
                     </div>
                   </div>
                 </div>
-                {/* Costs */}
+                {/* Chi phí */}
                 <div>
                   <h3 className="font-semibold text-slate-800 mb-3">Chi phí & Dịch vụ</h3>
                   <div className="grid grid-cols-[120px_1fr] items-center gap-y-3">
@@ -665,7 +724,7 @@ export default function ContractsPage() {
                   </div>
                 </div>
 
-                {/* Assets & Terms */}
+                {/* Tài sản & Điều khoản */}
                 <div>
                   <h3 className="font-semibold text-slate-800 mb-3">Tài sản & Điều khoản</h3>
                   <div className="space-y-4">
@@ -690,7 +749,7 @@ export default function ContractsPage() {
                   </div>
                 </div>
 
-                {/* Confirm Action */}
+                {/* Xác nhận */}
                 <div>
                   <h3 className="font-semibold text-slate-800 mb-3">Xác nhận hợp đồng</h3>
                   <div className="grid grid-cols-[140px_1fr] items-center gap-y-3 mb-4">
@@ -751,7 +810,8 @@ export default function ContractsPage() {
             </div>
           )}
         </Panel>
-      </PanelGroup>
+        </PanelGroup>
+      </div>
     </div>
   );
 }

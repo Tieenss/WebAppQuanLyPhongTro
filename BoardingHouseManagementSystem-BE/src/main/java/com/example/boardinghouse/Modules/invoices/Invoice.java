@@ -33,6 +33,9 @@ public class Invoice {
     @Column(name = "utility_record_id", nullable = false)
     private Long utilityRecordId;
 
+    @Column(name = "bank_account_id")
+    private Long bankAccountId;
+
     @Column(name = "invoice_code", nullable = false, length = 100)
     private String invoiceCode;
 
@@ -42,23 +45,75 @@ public class Invoice {
     @Column(name = "electricity_price", nullable = false, precision = 15, scale = 2)
     private BigDecimal electricityPrice;
 
+    @Column(name = "old_electricity_index")
+    private Integer oldElectricityIndex;
+
+    @Column(name = "new_electricity_index")
+    private Integer newElectricityIndex;
+
+    @Column(name = "electricity_usage")
+    private Integer electricityUsage;
+
+    @Column(name = "electricity_unit_price", precision = 15, scale = 2)
+    private BigDecimal electricityUnitPrice;
+
     @Column(name = "water_price", nullable = false, precision = 15, scale = 2)
     private BigDecimal waterPrice;
 
+    @Column(name = "old_water_index")
+    private Integer oldWaterIndex;
+
+    @Column(name = "new_water_index")
+    private Integer newWaterIndex;
+
+    @Column(name = "water_usage")
+    private Integer waterUsage;
+
+    @Column(name = "water_unit_price", precision = 15, scale = 2)
+    private BigDecimal waterUnitPrice;
+
     @Column(name = "service_price", nullable = false, precision = 15, scale = 2)
     private BigDecimal servicePrice;
+
+    @Column(name = "service_quantity")
+    @Builder.Default
+    private Integer serviceQuantity = 1;
+
+    @Column(name = "service_unit_price", precision = 15, scale = 2)
+    private BigDecimal serviceUnitPrice;
 
     @Column(name = "internet_price", precision = 15, scale = 2)
     @Builder.Default
     private BigDecimal internetPrice = BigDecimal.ZERO;
 
+    @Column(name = "internet_quantity")
+    @Builder.Default
+    private Integer internetQuantity = 1;
+
+    @Column(name = "internet_unit_price", precision = 15, scale = 2)
+    private BigDecimal internetUnitPrice;
+
     @Column(name = "cleaning_price", precision = 15, scale = 2)
     @Builder.Default
     private BigDecimal cleaningPrice = BigDecimal.ZERO;
 
+    @Column(name = "cleaning_quantity")
+    @Builder.Default
+    private Integer cleaningQuantity = 1;
+
+    @Column(name = "cleaning_unit_price", precision = 15, scale = 2)
+    private BigDecimal cleaningUnitPrice;
+
     @Column(name = "parking_price", precision = 15, scale = 2)
     @Builder.Default
     private BigDecimal parkingPrice = BigDecimal.ZERO;
+
+    @Column(name = "parking_quantity")
+    @Builder.Default
+    private Integer parkingQuantity = 0;
+
+    @Column(name = "parking_unit_price", precision = 15, scale = 2)
+    private BigDecimal parkingUnitPrice;
 
     @Column(name = "other_price", precision = 15, scale = 2)
     @Builder.Default

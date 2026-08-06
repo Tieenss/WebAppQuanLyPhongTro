@@ -1,8 +1,19 @@
 import { RegisterForm } from "@/components/auth/register-form";
 import { Building2 } from "lucide-react";
 import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
-export default function RegisterPage() { 
+export default async function RegisterPage() { 
+  const session = await getServerSession(authOptions);
+  
+  if (session?.user?.role) {
+    if (session.user.role === "LANDLORD") redirect("/landlord/dashboard");
+    if (session.user.role === "ADMIN") redirect("/admin/dashboard");
+    if (session.user.role === "TENANT") redirect("/tenant/dashboard");
+  }
+
   return (
     <div className="w-full min-h-[calc(100vh-2rem)] flex rounded-3xl overflow-hidden shadow-2xl bg-white m-4">
       {/* Cột trái: Biểu mẫu */}

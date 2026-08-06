@@ -8,6 +8,7 @@ import com.example.boardinghouse.Modules.user.user.User;
 import com.example.boardinghouse.Modules.user.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.example.boardinghouse.security.SecurityUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -44,7 +45,18 @@ public class ContractService {
     }
 
     public List<ContractResponse> getActiveContractsByLandlordId(Long landlordId) {
+        if (SecurityUtils.isAdmin()) {
+            return contractRepository.findByStatus("active").stream()
+                    .map(this::mapToResponse)
+                    .collect(Collectors.toList());
+        }
         return contractRepository.findByRoomBuildingLandlordIdAndStatus(landlordId, "active").stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<ContractResponse> getContractsByTenantId(Long tenantId) {
+        return contractRepository.findByTenantId(tenantId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -61,6 +73,10 @@ public class ContractService {
 
         // Sinh mã hợp đồng (ví dụ: HD-ROOMID-TIMESTAMP)
         String code = request.getContractCode() != null ? request.getContractCode() : "HD-" + room.getRoomNumber() + "-" + System.currentTimeMillis();
+
+        if (contractRepository.existsByContractCode(code)) {
+            throw new IllegalArgumentException("Mã hợp đồng đã tồn tại");
+        }
 
         Contract contract = Contract.builder()
                 .contractCode(code)
@@ -101,6 +117,13 @@ public class ContractService {
     public ContractResponse updateContract(Long id, ContractRequest request) {
         Contract contract = contractRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Contract not found"));
+
+        if (request.getContractCode() != null) {
+            java.util.Optional<Contract> existingByCode = contractRepository.findByContractCode(request.getContractCode());
+            if (existingByCode.isPresent() && !existingByCode.get().getId().equals(id)) {
+                throw new IllegalArgumentException("Mã hợp đồng đã tồn tại");
+            }
+        }
 
         if (!contract.getRoom().getId().equals(request.getRoomId())) {
             Room room = roomRepository.findById(request.getRoomId())
@@ -180,7 +203,7 @@ public class ContractService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if ("guest".equals(user.getRole())) {
-            user.setRole("tenant");
+            user.setRole("TENANT");
         }
 
         Room room = contract.getRoom();

@@ -28,9 +28,14 @@ public class ActivityLogService {
         activityLogRepository.save(log);
     }
 
-    public List<ActivityLogResponse> getRecentActivities(Long landlordId, int limit) {
-        return activityLogRepository.findByLandlordIdOrderByCreatedAtDesc(landlordId, PageRequest.of(0, limit))
-                .stream()
+    public List<ActivityLogResponse> getRecentActivities(Long landlordId, int limit, boolean isAdmin) {
+        List<ActivityLog> logs;
+        if (isAdmin) {
+            logs = activityLogRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(0, limit));
+        } else {
+            logs = activityLogRepository.findByLandlordIdOrderByCreatedAtDesc(landlordId, PageRequest.of(0, limit));
+        }
+        return logs.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }

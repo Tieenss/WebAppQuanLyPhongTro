@@ -6,6 +6,8 @@ import com.example.boardinghouse.Modules.invoices.dto.InvoiceCreateRequest;
 import com.example.boardinghouse.Modules.invoices.dto.InvoiceResponse;
 import com.example.boardinghouse.Modules.utility.UtilityRecord;
 import com.example.boardinghouse.Modules.utility.UtilityRecordRepository;
+import com.example.boardinghouse.Modules.user.bankaccount.BankAccount;
+import com.example.boardinghouse.Modules.user.bankaccount.BankAccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +23,7 @@ public class InvoiceService {
     private final InvoiceRepository invoiceRepository;
     private final UtilityRecordRepository utilityRecordRepository;
     private final ContractRepository contractRepository;
+    private final BankAccountRepository bankAccountRepository;
 
     public InvoiceResponse createInvoice(InvoiceCreateRequest request) {
         // Validate Contract
@@ -45,29 +48,47 @@ public class InvoiceService {
                 .findTopByRoomIdAndRecordDateLessThanOrderByRecordDateDesc(
                         currentUtilityRecord.getRoomId(), currentUtilityRecord.getRecordDate());
 
+        int oldElectricity = 0;
+        int oldWater = 0;
         int electricityUsage = currentUtilityRecord.getElectricityIndex();
         int waterUsage = currentUtilityRecord.getWaterIndex();
 
         if (previousUtilityRecordOpt.isPresent()) {
             UtilityRecord prev = previousUtilityRecordOpt.get();
-            electricityUsage = Math.max(0, currentUtilityRecord.getElectricityIndex() - prev.getElectricityIndex());
-            waterUsage = Math.max(0, currentUtilityRecord.getWaterIndex() - prev.getWaterIndex());
+            oldElectricity = prev.getElectricityIndex();
+            oldWater = prev.getWaterIndex();
+            electricityUsage = Math.max(0, currentUtilityRecord.getElectricityIndex() - oldElectricity);
+            waterUsage = Math.max(0, currentUtilityRecord.getWaterIndex() - oldWater);
         }
 
         // Calculate Amounts
-        BigDecimal electricityPriceTotal = request.getElectricityUnitPrice().multiply(BigDecimal.valueOf(electricityUsage));
-        BigDecimal waterPriceTotal = request.getWaterUnitPrice().multiply(BigDecimal.valueOf(waterUsage));
         BigDecimal electricityCost = request.getElectricityUnitPrice().multiply(BigDecimal.valueOf(electricityUsage));
         BigDecimal waterCost = request.getWaterUnitPrice().multiply(BigDecimal.valueOf(waterUsage));
+
+        BigDecimal serviceCost = request.getServiceUnitPrice() != null && request.getServiceQuantity() != null ? 
+            request.getServiceUnitPrice().multiply(BigDecimal.valueOf(request.getServiceQuantity())) : 
+            (request.getServicePrice() != null ? request.getServicePrice() : BigDecimal.ZERO);
+            
+        BigDecimal internetCost = request.getInternetUnitPrice() != null && request.getInternetQuantity() != null ? 
+            request.getInternetUnitPrice().multiply(BigDecimal.valueOf(request.getInternetQuantity())) : 
+            (request.getInternetPrice() != null ? request.getInternetPrice() : BigDecimal.ZERO);
+            
+        BigDecimal cleaningCost = request.getCleaningUnitPrice() != null && request.getCleaningQuantity() != null ? 
+            request.getCleaningUnitPrice().multiply(BigDecimal.valueOf(request.getCleaningQuantity())) : 
+            (request.getCleaningPrice() != null ? request.getCleaningPrice() : BigDecimal.ZERO);
+            
+        BigDecimal parkingCost = request.getParkingUnitPrice() != null && request.getParkingQuantity() != null ? 
+            request.getParkingUnitPrice().multiply(BigDecimal.valueOf(request.getParkingQuantity())) : 
+            (request.getParkingPrice() != null ? request.getParkingPrice() : BigDecimal.ZERO);
 
         // Total = roomPrice + electricityPrice + waterPrice + servicePrice + internetPrice + cleaningPrice + parkingPrice + otherPrice + debt - discount
         BigDecimal totalAmount = contract.getRentalPrice()
                 .add(electricityCost)
                 .add(waterCost)
-                .add(request.getServicePrice() != null ? request.getServicePrice() : BigDecimal.ZERO)
-                .add(request.getInternetPrice() != null ? request.getInternetPrice() : BigDecimal.ZERO)
-                .add(request.getCleaningPrice() != null ? request.getCleaningPrice() : BigDecimal.ZERO)
-                .add(request.getParkingPrice() != null ? request.getParkingPrice() : BigDecimal.ZERO)
+                .add(serviceCost)
+                .add(internetCost)
+                .add(cleaningCost)
+                .add(parkingCost)
                 .add(request.getOtherPrice() != null ? request.getOtherPrice() : BigDecimal.ZERO)
                 .add(request.getDebtFromPreviousMonth() != null ? request.getDebtFromPreviousMonth() : BigDecimal.ZERO)
                 .subtract(request.getDiscount() != null ? request.getDiscount() : BigDecimal.ZERO);
@@ -76,14 +97,31 @@ public class InvoiceService {
         Invoice invoice = Invoice.builder()
                 .contractId(contract.getId())
                 .utilityRecordId(request.getUtilityRecordId())
+                .bankAccountId(request.getBankAccountId())
                 .invoiceCode("INV-" + System.currentTimeMillis())
                 .roomPrice(contract.getRentalPrice())
                 .electricityPrice(electricityCost)
+                .oldElectricityIndex(oldElectricity)
+                .newElectricityIndex(currentUtilityRecord.getElectricityIndex())
+                .electricityUsage(electricityUsage)
+                .electricityUnitPrice(request.getElectricityUnitPrice())
                 .waterPrice(waterCost)
-                .servicePrice(request.getServicePrice() != null ? request.getServicePrice() : BigDecimal.ZERO)
-                .internetPrice(request.getInternetPrice() != null ? request.getInternetPrice() : BigDecimal.ZERO)
-                .cleaningPrice(request.getCleaningPrice() != null ? request.getCleaningPrice() : BigDecimal.ZERO)
-                .parkingPrice(request.getParkingPrice() != null ? request.getParkingPrice() : BigDecimal.ZERO)
+                .oldWaterIndex(oldWater)
+                .newWaterIndex(currentUtilityRecord.getWaterIndex())
+                .waterUsage(waterUsage)
+                .waterUnitPrice(request.getWaterUnitPrice())
+                .servicePrice(serviceCost)
+                .serviceQuantity(request.getServiceQuantity() != null ? request.getServiceQuantity() : 1)
+                .serviceUnitPrice(request.getServiceUnitPrice())
+                .internetPrice(internetCost)
+                .internetQuantity(request.getInternetQuantity() != null ? request.getInternetQuantity() : 1)
+                .internetUnitPrice(request.getInternetUnitPrice())
+                .cleaningPrice(cleaningCost)
+                .cleaningQuantity(request.getCleaningQuantity() != null ? request.getCleaningQuantity() : 1)
+                .cleaningUnitPrice(request.getCleaningUnitPrice())
+                .parkingPrice(parkingCost)
+                .parkingQuantity(request.getParkingQuantity() != null ? request.getParkingQuantity() : 0)
+                .parkingUnitPrice(request.getParkingUnitPrice())
                 .otherPrice(request.getOtherPrice() != null ? request.getOtherPrice() : BigDecimal.ZERO)
                 .debtFromPreviousMonth(request.getDebtFromPreviousMonth() != null ? request.getDebtFromPreviousMonth() : BigDecimal.ZERO)
                 .discount(request.getDiscount() != null ? request.getDiscount() : BigDecimal.ZERO)
@@ -108,6 +146,20 @@ public class InvoiceService {
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
+    
+    public List<InvoiceResponse> getMyInvoices(Long tenantId) {
+        List<Long> contractIds = contractRepository.findByTenantId(tenantId).stream()
+                .map(Contract::getId)
+                .collect(Collectors.toList());
+                
+        if (contractIds.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        
+        return invoiceRepository.findByContractIdIn(contractIds).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
 
     public InvoiceResponse payInvoice(Long invoiceId, String paymentImageUrl) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
@@ -120,19 +172,68 @@ public class InvoiceService {
         return mapToResponse(savedInvoice);
     }
 
+    public InvoiceResponse tenantSubmitReceipt(Long invoiceId, String paymentImageUrl) {
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new RuntimeException("Invoice not found with ID: " + invoiceId));
+        
+        invoice.setStatus(Invoice.InvoiceStatus.PENDING); // Giữ PENDING, nhưng cập nhật ảnh
+        invoice.setPaymentImageUrl(paymentImageUrl);
+        
+        Invoice savedInvoice = invoiceRepository.save(invoice);
+        return mapToResponse(savedInvoice);
+    }
+
+    public InvoiceResponse rejectReceipt(Long invoiceId) {
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new RuntimeException("Invoice not found with ID: " + invoiceId));
+        
+        invoice.setStatus(Invoice.InvoiceStatus.PENDING); // Trở về trạng thái chờ thanh toán
+        invoice.setPaymentImageUrl(null);
+        
+        Invoice savedInvoice = invoiceRepository.save(invoice);
+        return mapToResponse(savedInvoice);
+    }
+
+    public void deleteInvoice(Long invoiceId) {
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new RuntimeException("Invoice not found with ID: " + invoiceId));
+        
+        invoiceRepository.deleteById(invoiceId);
+        
+        if (invoice.getUtilityRecordId() != null) {
+            utilityRecordRepository.deleteById(invoice.getUtilityRecordId());
+        }
+    }
+
     private InvoiceResponse mapToResponse(Invoice invoice) {
-        return InvoiceResponse.builder()
+        InvoiceResponse.InvoiceResponseBuilder builder = InvoiceResponse.builder()
                 .id(invoice.getId())
                 .contractId(invoice.getContractId())
                 .utilityRecordId(invoice.getUtilityRecordId())
                 .invoiceCode(invoice.getInvoiceCode())
                 .roomPrice(invoice.getRoomPrice())
                 .electricityPrice(invoice.getElectricityPrice())
+                .oldElectricityIndex(invoice.getOldElectricityIndex())
+                .newElectricityIndex(invoice.getNewElectricityIndex())
+                .electricityUsage(invoice.getElectricityUsage())
+                .electricityUnitPrice(invoice.getElectricityUnitPrice())
                 .waterPrice(invoice.getWaterPrice())
+                .oldWaterIndex(invoice.getOldWaterIndex())
+                .newWaterIndex(invoice.getNewWaterIndex())
+                .waterUsage(invoice.getWaterUsage())
+                .waterUnitPrice(invoice.getWaterUnitPrice())
                 .servicePrice(invoice.getServicePrice())
+                .serviceQuantity(invoice.getServiceQuantity())
+                .serviceUnitPrice(invoice.getServiceUnitPrice())
                 .internetPrice(invoice.getInternetPrice())
+                .internetQuantity(invoice.getInternetQuantity())
+                .internetUnitPrice(invoice.getInternetUnitPrice())
                 .cleaningPrice(invoice.getCleaningPrice())
+                .cleaningQuantity(invoice.getCleaningQuantity())
+                .cleaningUnitPrice(invoice.getCleaningUnitPrice())
                 .parkingPrice(invoice.getParkingPrice())
+                .parkingQuantity(invoice.getParkingQuantity())
+                .parkingUnitPrice(invoice.getParkingUnitPrice())
                 .otherPrice(invoice.getOtherPrice())
                 .debtFromPreviousMonth(invoice.getDebtFromPreviousMonth())
                 .discount(invoice.getDiscount())
@@ -140,7 +241,18 @@ public class InvoiceService {
                 .dueDate(invoice.getDueDate())
                 .status(invoice.getStatus())
                 .paymentImageUrl(invoice.getPaymentImageUrl())
-                .createdAt(invoice.getCreatedAt())
-                .build();
+                .createdAt(invoice.getCreatedAt());
+
+        if (invoice.getBankAccountId() != null) {
+            bankAccountRepository.findById(invoice.getBankAccountId()).ifPresent(bank -> {
+                builder.bankAccountId(bank.getId());
+                builder.bankName(bank.getBankName());
+                builder.bankCode(bank.getBankCode());
+                builder.bankAccountNumber(bank.getAccountNumber());
+                builder.bankAccountHolder(bank.getAccountHolder());
+            });
+        }
+
+        return builder.build();
     }
 }

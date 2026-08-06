@@ -24,7 +24,7 @@ public class RoomImage {
     private String imageUrl;
 
     @Column(name = "public_id")
-    private String publicId; // To delete from Cloudinary if needed
+    private String publicId; // Để xoá ảnh trên Cloudinary nếu cần
 
     @org.hibernate.annotations.CreationTimestamp
     @Column(name = "created_at", updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")

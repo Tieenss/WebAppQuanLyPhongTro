@@ -66,7 +66,7 @@ public class DataSeeder implements CommandLineRunner {
                     .fullName("Nguyễn Văn Chủ Trọ")
                     .phone("0987654321")
                     .email("chutro@gmail.com")
-                    .role("landlord")
+                    .role("LANDLORD")
                     .build();
             landlord = userRepository.save(landlord);
             System.out.println("Seeded Landlord: chutro / 123456");
@@ -79,7 +79,7 @@ public class DataSeeder implements CommandLineRunner {
                     .fullName("Trần Thị Khách Thuê")
                     .phone("0123456789")
                     .email("khachthue@gmail.com")
-                    .role("tenant")
+                    .role("TENANT")
                     .landlord(landlord)
                     .build();
             userRepository.save(tenant);

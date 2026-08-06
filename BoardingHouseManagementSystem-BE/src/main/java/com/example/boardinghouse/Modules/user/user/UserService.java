@@ -38,11 +38,34 @@ public class UserService {
                 .fullName(request.getFullName())
                 .phone(request.getPhone())
                 .email(request.getEmail())
-                .role(request.getRole() != null ? request.getRole() : "guest")
+                .avatarUrl(request.getAvatarUrl())
+                .role(request.getRole() != null ? request.getRole().toUpperCase() : "GUEST")
                 .build();
         
         User savedUser = userRepository.save(user);
         return mapToResponse(savedUser);
+    }
+
+    public UserResponse updateUser(Long id, UserRequest request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        if (request.getUsername() != null) user.setUsername(request.getUsername());
+        if (request.getPassword() != null && !request.getPassword().isEmpty()) user.setPassword(request.getPassword());
+        if (request.getFullName() != null) user.setFullName(request.getFullName());
+        if (request.getPhone() != null) user.setPhone(request.getPhone());
+        if (request.getEmail() != null) user.setEmail(request.getEmail());
+        if (request.getRole() != null) user.setRole(request.getRole().toUpperCase());
+        if (request.getAvatarUrl() != null) user.setAvatarUrl(request.getAvatarUrl());
+
+        User updatedUser = userRepository.save(user);
+        return mapToResponse(updatedUser);
+    }
+
+    public void deleteUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        userRepository.delete(user);
     }
 
     private UserResponse mapToResponse(User user) {

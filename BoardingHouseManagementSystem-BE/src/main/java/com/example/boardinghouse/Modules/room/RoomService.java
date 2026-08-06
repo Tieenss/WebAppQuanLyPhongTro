@@ -38,27 +38,19 @@ public class RoomService {
     }
 
     public List<RoomResponse> getAllRooms() {
-        return roomRepository.findAll().stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        return mapToResponseList(roomRepository.findAll());
     }
 
     public List<RoomResponse> getRoomsByBuilding(Long buildingId) {
-        return roomRepository.findByBuildingId(buildingId).stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        return mapToResponseList(roomRepository.findByBuildingId(buildingId));
     }
 
     public List<RoomResponse> getRoomsByLandlordId(Long landlordId) {
-        return roomRepository.findByBuildingLandlordId(landlordId).stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        return mapToResponseList(roomRepository.findByBuildingLandlordId(landlordId));
     }
 
     public List<RoomResponse> getRoomsByStatus(String status) {
-        return roomRepository.findByStatus(status).stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        return mapToResponseList(roomRepository.findByStatus(status));
     }
 
     public RoomResponse getRoomById(Long id) {
@@ -70,6 +62,10 @@ public class RoomService {
     public RoomResponse createRoom(RoomRequest request) {
         Building building = buildingRepository.findById(request.getBuildingId())
                 .orElseThrow(() -> new RuntimeException("Building not found"));
+
+        if (roomRepository.existsByRoomNumberAndBuildingId(request.getRoomNumber(), request.getBuildingId())) {
+            throw new IllegalArgumentException("Tên/số phòng này đã tồn tại trong tòa nhà đã chọn");
+        }
 
         Room room = Room.builder()
                 .building(building)
@@ -92,6 +88,11 @@ public class RoomService {
     public RoomResponse updateRoom(Long id, RoomRequest request) {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Room not found"));
+
+        java.util.Optional<Room> existingRoom = roomRepository.findByRoomNumberAndBuildingId(request.getRoomNumber(), request.getBuildingId());
+        if (existingRoom.isPresent() && !existingRoom.get().getId().equals(id)) {
+            throw new IllegalArgumentException("Tên/số phòng này đã tồn tại trong tòa nhà đã chọn");
+        }
 
         if (!room.getBuilding().getId().equals(request.getBuildingId())) {
             Building building = buildingRepository.findById(request.getBuildingId())
@@ -136,12 +137,34 @@ public class RoomService {
         return mapToResponse(room);
     }
 
+    private List<RoomResponse> mapToResponseList(List<Room> rooms) {
+        if (rooms.isEmpty()) return java.util.Collections.emptyList();
+        
+        List<Long> roomIds = rooms.stream().map(Room::getId).collect(Collectors.toList());
+        List<RoomImage> allImages = roomImageRepository.findByRoomIdIn(roomIds);
+        
+        java.util.Map<Long, List<String>> imagesByRoomId = allImages.stream()
+                .collect(Collectors.groupingBy(
+                        img -> img.getRoom().getId(),
+                        Collectors.mapping(RoomImage::getImageUrl, Collectors.toList())
+                ));
+                
+        return rooms.stream().map(room -> {
+            List<String> imageUrls = imagesByRoomId.getOrDefault(room.getId(), java.util.Collections.emptyList());
+            return buildRoomResponse(room, imageUrls);
+        }).collect(Collectors.toList());
+    }
+
     private RoomResponse mapToResponse(Room room) {
         List<String> imageUrls = roomImageRepository.findByRoomId(room.getId())
                 .stream()
                 .map(RoomImage::getImageUrl)
                 .collect(Collectors.toList());
 
+        return buildRoomResponse(room, imageUrls);
+    }
+
+    private RoomResponse buildRoomResponse(Room room, List<String> imageUrls) {
         return RoomResponse.builder()
                 .id(room.getId())
                 .buildingId(room.getBuilding().getId())

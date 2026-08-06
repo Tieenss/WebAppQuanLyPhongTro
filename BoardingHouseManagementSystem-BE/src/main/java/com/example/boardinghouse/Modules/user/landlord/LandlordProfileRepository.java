@@ -8,4 +8,5 @@ import java.util.Optional;
 @Repository
 public interface LandlordProfileRepository extends JpaRepository<LandlordProfile, Long> {
     Optional<LandlordProfile> findByUserId(Long userId);
+    void deleteByUserId(Long userId);
 }

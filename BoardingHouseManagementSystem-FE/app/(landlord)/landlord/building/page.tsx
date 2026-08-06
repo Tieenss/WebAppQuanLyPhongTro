@@ -57,7 +57,7 @@ export default function BuildingsPage() {
           : []
       }));
 
-      const sorted = [...data].sort((a: Building, b: Building) => {
+      const sorted = [...data].sort((a: any, b: any) => {
         const nameA = a.name || a.buildingName || "";
         const nameB = b.name || b.buildingName || "";
         return nameA.localeCompare(nameB);
@@ -100,7 +100,7 @@ export default function BuildingsPage() {
     const newId = "NEW_" + Date.now().toString();
     const newBuilding: Building = {
       id: newId,
-      name: "Nhà trọ mới",
+      name: "",
       address: "",
       description: "",
       owner: "",
@@ -127,7 +127,7 @@ export default function BuildingsPage() {
     if (!id) return;
     if (confirm("Bạn có chắc chắn muốn xoá nhà trọ này không?")) {
       try {
-        if (!id.startsWith("NEW_")) {
+        if (!String(id).startsWith("NEW_")) {
           await apiClient.delete(`/buildings/${id}`);
           toast.success("Xoá thành công!");
         }
@@ -145,12 +145,12 @@ export default function BuildingsPage() {
 
   const handleSave = async () => {
     try {
-      const isNew = selectedId?.startsWith("NEW_");
+      const isNew = String(selectedId).startsWith("NEW_");
       let savedBuilding: Building;
       
       const payload: any = { 
         ...editForm,
-        landlordId: session?.user?.id ? parseInt(session.user.id) : 1, // Fallback if no session
+        landlordId: session?.user?.id ? parseInt(session.user.id) : 1, // Dự phòng nếu không có session
         amenities: editForm.amenities ? editForm.amenities.join(', ') : ''
       };
 
@@ -181,14 +181,18 @@ export default function BuildingsPage() {
       });
       setSelectedId(savedBuilding.id || selectedId);
       setIsEditing(false);
-    } catch (error) {
-      toast.error("Có lỗi xảy ra khi lưu.");
+    } catch (error: any) {
+      console.error("Save error:", error);
+      const msg = error.response?.data?.message;
+      if (!msg) {
+        toast.error("Có lỗi xảy ra khi lưu.");
+      }
     }
   };
 
   const handleCancel = () => {
     setIsEditing(false);
-    if (selectedId?.startsWith("NEW_")) {
+    if (String(selectedId).startsWith("NEW_")) {
       const newBuildings = buildings.filter(b => b.id !== selectedId);
       setBuildings(newBuildings);
       setSelectedId(newBuildings.length > 0 ? newBuildings[0].id || null : null);
@@ -206,24 +210,31 @@ export default function BuildingsPage() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] md:h-screen -m-4 sm:-m-6">
-      <PanelGroup direction="horizontal" className="flex-1 flex overflow-hidden">
+    <div className="p-4 sm:p-6 w-full flex flex-col h-[calc(100vh-4rem)] md:h-[calc(100vh-6rem)]">
+      {/* Header section */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex items-start sm:items-center gap-3">
+          <Link href="/landlord/management" className="text-slate-400 hover:text-blue-600 transition-colors mt-1 sm:mt-0">
+            <ArrowLeft className="w-6 h-6" />
+          </Link>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Quản lý Nhà trọ</h1>
+            <p className="mt-1 text-sm text-slate-500">Quản lý thông tin chung, địa chỉ và tiện nghi của các tòa nhà / khu trọ.</p>
+          </div>
+        </div>
+        <button onClick={handleAdd} className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 shrink-0">
+          <Plus className="w-5 h-5" />
+          <span>Thêm nhà trọ</span>
+        </button>
+      </div>
+
+      <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <PanelGroup orientation="horizontal" className="w-full h-full flex">
         
-        {/* CỘT TRÁI: DANH SÁCH */}
-        <Panel defaultSize={65} minSize={30} className="w-full md:w-2/3 flex flex-col border-r bg-slate-50/50">
-          <div className="p-4 md:p-6 border-b bg-white">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-              <div className="flex items-center gap-3">
-                <Link href="/landlord/management" className="text-slate-400 hover:text-blue-600 transition-colors">
-                  <ArrowLeft className="w-6 h-6" />
-                </Link>
-                <h1 className="text-2xl font-bold text-slate-800">Quản lý nhà trọ</h1>
-              </div>
-              <Button onClick={handleAdd} className="bg-blue-600 hover:bg-blue-700">
-                <Plus className="w-4 h-4 mr-2" /> Thêm nhà trọ
-              </Button>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3">
+          {/* CỘT TRÁI: DANH SÁCH */}
+          <Panel defaultSize={65} minSize={30} className="w-full md:w-2/3 flex flex-col border-r border-slate-100 bg-slate-50/30">
+            <div className="p-4 md:p-5 border-b border-slate-100 bg-white">
+              <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input 
@@ -241,8 +252,7 @@ export default function BuildingsPage() {
                 >
                   <option value="Tất cả">Trạng thái (Tất cả)</option>
                   <option value="Hoạt động">Hoạt động</option>
-                  <option value="Bảo trì">Bảo trì</option>
-                  <option value="Đóng cửa">Đóng cửa</option>
+                  <option value="Không hoạt động">Không hoạt động</option>
                 </select>
               </div>
             </div>
@@ -313,7 +323,7 @@ export default function BuildingsPage() {
               <div className="flex justify-between items-center">
                 <h2 className="text-lg font-semibold text-slate-800">Thông tin chi tiết</h2>
                 <div className="flex gap-2">
-                  {!isEditing ? (
+                  {!isEditing && (
                     <>
                       <Button className="bg-yellow-500 hover:bg-yellow-600 text-white" size="sm" onClick={handleEdit}>
                         <Edit2 className="w-4 h-4 mr-2" /> Sửa
@@ -322,11 +332,6 @@ export default function BuildingsPage() {
                         <Trash2 className="w-4 h-4 mr-2" /> Xoá
                       </Button>
                     </>
-                  ) : (
-                    <>
-                      <Button variant="outline" size="sm" onClick={handleCancel}>Hủy</Button>
-                      <Button size="sm" onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">Lưu</Button>
-                    </>
                   )}
                 </div>
               </div>
@@ -334,16 +339,25 @@ export default function BuildingsPage() {
               {/* Phần Hình Ảnh */}
               <div 
                 className="relative aspect-video rounded-xl overflow-hidden bg-slate-100 cursor-zoom-in group"
-                onClick={() => setZoomedImage(selectedBuilding.imageUrl)}
+                onClick={() => selectedBuilding.imageUrl && setZoomedImage(selectedBuilding.imageUrl)}
               >
-                <img 
-                  src={selectedBuilding.imageUrl} 
-                  alt={selectedBuilding.name}
-                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                  <Maximize2 className="text-white opacity-0 group-hover:opacity-100 w-8 h-8 drop-shadow-md" />
-                </div>
+                {selectedBuilding.imageUrl ? (
+                  <>
+                    <img 
+                      src={selectedBuilding.imageUrl} 
+                      alt={selectedBuilding.name}
+                      className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                      <Maximize2 className="text-white opacity-0 group-hover:opacity-100 w-8 h-8 drop-shadow-md" />
+                    </div>
+                  </>
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                    <ImageIcon className="w-8 h-8 mb-2 opacity-50" />
+                    <span className="text-sm">Chưa có ảnh</span>
+                  </div>
+                )}
               </div>
 
               {/* Phần Biểu Mẫu */}
@@ -352,7 +366,8 @@ export default function BuildingsPage() {
                   <Label htmlFor="name">Tên tòa nhà</Label>
                   <Input 
                     id="name" 
-                    value={isEditing ? editForm.name : selectedBuilding.name}
+                    placeholder="Nhà trọ mới..."
+                    value={isEditing ? (editForm.name || "") : (selectedBuilding.name || "")}
                     onChange={e => setEditForm({...editForm, name: e.target.value})}
                     readOnly={!isEditing}
                     className={!isEditing ? "bg-slate-50 focus-visible:ring-0" : ""}
@@ -362,7 +377,7 @@ export default function BuildingsPage() {
                   <Label htmlFor="address">Địa chỉ</Label>
                   <Input 
                     id="address" 
-                    value={isEditing ? editForm.address : selectedBuilding.address}
+                    value={isEditing ? (editForm.address || "") : (selectedBuilding.address || "")}
                     onChange={e => setEditForm({...editForm, address: e.target.value})}
                     readOnly={!isEditing}
                     className={!isEditing ? "bg-slate-50 focus-visible:ring-0" : ""}
@@ -374,7 +389,7 @@ export default function BuildingsPage() {
                     <Label htmlFor="owner">Chủ sở hữu</Label>
                     <Input 
                       id="owner" 
-                      value={isEditing ? editForm.owner : selectedBuilding.owner}
+                      value={isEditing ? (editForm.owner || "") : (selectedBuilding.owner || "")}
                       onChange={e => setEditForm({...editForm, owner: e.target.value})}
                       readOnly={!isEditing}
                       className={!isEditing ? "bg-slate-50 focus-visible:ring-0" : ""}
@@ -397,7 +412,7 @@ export default function BuildingsPage() {
                   <Label htmlFor="status">Trạng thái</Label>
                   <select 
                     id="status"
-                    value={isEditing ? editForm.status : selectedBuilding.status}
+                    value={isEditing ? (editForm.status || "Hoạt động") : (selectedBuilding.status || "Hoạt động")}
                     onChange={e => setEditForm({...editForm, status: e.target.value as PropertyStatus})}
                     disabled={!isEditing}
                     className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-50"
@@ -412,7 +427,7 @@ export default function BuildingsPage() {
                   <textarea 
                     id="desc"
                     className={`flex min-h-[80px] w-full rounded-md border border-slate-200 px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 ${!isEditing ? 'bg-slate-50 text-slate-500 focus-visible:ring-0' : 'bg-white'}`}
-                    value={isEditing ? editForm.description : selectedBuilding.description}
+                    value={isEditing ? (editForm.description || "") : (selectedBuilding.description || "")}
                     onChange={e => setEditForm({...editForm, description: e.target.value})}
                     readOnly={!isEditing}
                   />
@@ -449,6 +464,14 @@ export default function BuildingsPage() {
 
               </div>
 
+              {/* Cụm nút thao tác ở dưới cùng */}
+              {isEditing && (
+                <div className="flex gap-2 justify-end mt-4 pt-4 border-t border-slate-100">
+                  <Button variant="outline" size="sm" onClick={handleCancel}>Hủy</Button>
+                  <Button size="sm" onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">Lưu</Button>
+                </div>
+              )}
+
             </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-6 text-center">
@@ -457,7 +480,8 @@ export default function BuildingsPage() {
             </div>
           )}
         </Panel>
-      </PanelGroup>
+        </PanelGroup>
+      </div>
 
       {/* LIGHTBOX ĐỂ PHÓNG TO ẢNH */}
       {zoomedImage && (

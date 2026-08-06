@@ -50,6 +50,7 @@ public class IssueService {
         return mapToResponse(issueRepository.save(issue));
     }
 
+    @Transactional(readOnly = true)
     public List<IssueResponse> getIssues(String status, Long roomId) {
         Long userId = SecurityUtils.getCurrentUserId();
         if (userId == null) {
@@ -116,8 +117,8 @@ public class IssueService {
                 .id(issue.getId())
                 .roomId(issue.getRoom().getId())
                 .roomNumber(issue.getRoom().getRoomNumber())
-                .tenantId(issue.getTenant().getId())
-                .tenantName(issue.getTenant().getFullName())
+                .tenantId(issue.getTenant() != null ? issue.getTenant().getId() : null)
+                .tenantName(issue.getTenant() != null ? issue.getTenant().getFullName() : null)
                 .issueType(issue.getIssueType())
                 .description(issue.getDescription())
                 .imageUrl(issue.getImageUrl())

@@ -31,7 +31,8 @@ public class ActivityLogController {
 
         try {
             Long landlordId = Long.parseLong((String) authentication.getPrincipal());
-            return ResponseEntity.ok(activityLogService.getRecentActivities(landlordId, limit));
+            boolean isAdmin = com.example.boardinghouse.security.SecurityUtils.isAdmin();
+            return ResponseEntity.ok(activityLogService.getRecentActivities(landlordId, limit, isAdmin));
         } catch (NumberFormatException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }

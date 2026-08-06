@@ -18,4 +18,9 @@ public class BuildingRequest {
     private String imageUrl;
     
     private String amenities;
+
+    private String owner;
+    private Integer totalRooms;
+    private String status;
+    private String description;
 }

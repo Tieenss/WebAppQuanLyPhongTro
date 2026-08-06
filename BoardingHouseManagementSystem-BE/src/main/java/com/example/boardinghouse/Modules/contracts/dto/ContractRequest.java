@@ -10,7 +10,7 @@ public class ContractRequest {
     @NotNull(message = "Room ID is required")
     private Long roomId;
 
-    // Tenant có thể null nếu tạo hợp đồng cho phòng trống (chưa có người thuê)
+    // Người thuê có thể null nếu tạo hợp đồng cho phòng trống (chưa có người thuê)
     private Long tenantId;
 
     @NotNull(message = "Start date is required")

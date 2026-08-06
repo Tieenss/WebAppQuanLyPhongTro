@@ -1,69 +1,64 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Search, Filter, MoreVertical, FileText, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Plus, Search, Filter, MoreVertical, FileText, CheckCircle2, ArrowLeft, Eye, Printer, Trash2, X } from "lucide-react";
 import { CreateInvoiceModal } from "@/components/invoices/CreateInvoiceModal";
+import { ViewInvoiceModal } from "@/components/invoices/ViewInvoiceModal";
 import Link from "next/link";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import apiClient, { fetcher } from "@/lib/apiClient";
+import useSWR, { useSWRConfig } from "swr";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 
 export default function InvoicesPage() {
-  const [invoices, setInvoices] = useState<any[]>([]);
-  const [contracts, setContracts] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [viewInvoice, setViewInvoice] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const fetchData = async () => {
-    try {
-      const token = document.cookie.split('; ').find(row => row.startsWith('next-auth.session-token='))?.split('=')[1] || "";
-      const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-
-      const [invRes, contractsRes] = await Promise.all([
-        fetch(`${apiUrl}/api/invoices`, { headers }),
-        fetch(`${apiUrl}/api/contracts/active`, { headers })
-      ]);
-
-      const [invResData, contractsResData] = await Promise.all([
-        invRes.ok ? invRes.json() : { data: [] },
-        contractsRes.ok ? contractsRes.json() : { data: [] }
-      ]);
-
-      const invData = Array.isArray(invResData) ? invResData : (invResData.data || []);
-      const contractsData = Array.isArray(contractsResData) ? contractsResData : (contractsResData.data || []);
-
-      setInvoices(invData);
-      setContracts(contractsData);
-    } catch (error) {
-      console.error("Failed to fetch data", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const { data: swrInvoices, isLoading: isLoadingInvoices } = useSWR('/invoices', fetcher);
+  const { data: swrContracts, isLoading: isLoadingContracts } = useSWR('/contracts/active', fetcher);
+  const { mutate } = useSWRConfig();
+  
+  const invoices = swrInvoices ? (Array.isArray(swrInvoices) ? swrInvoices : (swrInvoices.data || [])) : [];
+  const contracts = swrContracts ? (Array.isArray(swrContracts) ? swrContracts : (swrContracts.data || [])) : [];
+  const isLoading = isLoadingInvoices || isLoadingContracts;
 
   const handlePayInvoice = async (id: number) => {
     try {
-      const token = document.cookie.split('; ').find(row => row.startsWith('next-auth.session-token='))?.split('=')[1] || "";
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/invoices/${id}/pay`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ paymentImageUrl: "" })
-      });
-
-      if (!res.ok) throw new Error("Lỗi khi thanh toán");
+      await apiClient.put(`/invoices/${id}/pay`, { paymentImageUrl: "" });
       toast.success("Đã xác nhận thu tiền thành công!");
-      fetchData();
+      mutate('/invoices');
     } catch (error) {
       toast.error("Không thể xác nhận thu tiền.");
     }
   };
 
-  const filteredInvoices = invoices.filter(inv => 
+  const handleDeleteInvoice = async (id: number) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa hóa đơn này không? Hành động này không thể hoàn tác.")) {
+      try {
+        await apiClient.delete(`/invoices/${id}`);
+        toast.success("Đã xóa hóa đơn thành công!");
+        mutate('/invoices');
+      } catch (error) {
+        toast.error("Không thể xóa hóa đơn.");
+      }
+    }
+  };
+
+  const handleRejectInvoice = async (id: number) => {
+    if (window.confirm("Bạn có chắc chắn muốn từ chối biên lai này? Người thuê sẽ phải nộp lại biên lai khác.")) {
+      try {
+        await apiClient.put(`/invoices/${id}/reject`, {});
+        toast.success("Đã từ chối biên lai thành công!");
+        mutate('/invoices');
+      } catch (error) {
+        toast.error("Không thể từ chối biên lai.");
+      }
+    }
+  };
+
+  const filteredInvoices = invoices.filter((inv: any) => 
     inv.invoiceCode?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -141,7 +136,7 @@ export default function InvoicesPage() {
                   </td>
                 </tr>
               ) : (
-                filteredInvoices.map((inv) => (
+                filteredInvoices.map((inv: any) => (
                   <tr key={inv.id} className="hover:bg-slate-50/80 transition-colors group">
                     <td className="px-6 py-4 whitespace-nowrap font-semibold text-slate-900">
                       {inv.invoiceCode || `#INV-${inv.id}`}
@@ -167,6 +162,10 @@ export default function InvoicesPage() {
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           <span>Đã thanh toán</span>
                         </span>
+                      ) : inv.status === "PENDING" && inv.paymentImageUrl ? (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                          Chờ xác nhận
+                        </span>
                       ) : inv.status === "UNPAID" || inv.status === "PENDING" ? (
                         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
                           Chờ thanh toán
@@ -187,9 +186,64 @@ export default function InvoicesPage() {
                             Xác nhận thu
                           </button>
                         )}
-                        <button className="text-slate-400 hover:text-slate-700 p-1 rounded-md hover:bg-slate-100 transition-colors">
-                          <MoreVertical className="w-5 h-5" />
-                        </button>
+                        <DropdownMenu.Root>
+                          <DropdownMenu.Trigger asChild>
+                            <button className="text-slate-400 hover:text-slate-700 p-1 rounded-md hover:bg-slate-100 transition-colors outline-none focus:ring-2 focus:ring-blue-500">
+                              <MoreVertical className="w-5 h-5" />
+                            </button>
+                          </DropdownMenu.Trigger>
+                          <DropdownMenu.Portal>
+                            <DropdownMenu.Content 
+                              className="min-w-[180px] bg-white rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border border-slate-100 py-1.5 z-[100] overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2"
+                              align="end"
+                              sideOffset={4}
+                            >
+                              <DropdownMenu.Item 
+                                onSelect={() => setViewInvoice(inv)}
+                                className="px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors flex items-center outline-none cursor-pointer"
+                              >
+                                <Eye className="w-4 h-4 mr-2.5 text-slate-400" />
+                                Xem chi tiết
+                              </DropdownMenu.Item>
+                              <DropdownMenu.Item 
+                                onSelect={() => {
+                                  setViewInvoice(inv);
+                                  // Optional: setTimeout(() => window.print(), 500)
+                                }}
+                                className="px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors flex items-center outline-none cursor-pointer"
+                              >
+                                <Printer className="w-4 h-4 mr-2.5 text-slate-400" />
+                                In / Xuất PDF
+                              </DropdownMenu.Item>
+                              {inv.status !== "PAID" && (
+                                <DropdownMenu.Item 
+                                  onSelect={() => handlePayInvoice(inv.id)}
+                                  className="px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors flex items-center outline-none cursor-pointer"
+                                >
+                                  <CheckCircle2 className="w-4 h-4 mr-2.5 text-emerald-500" />
+                                  Xác nhận thu tiền
+                                </DropdownMenu.Item>
+                              )}
+                              {inv.status === "PENDING" && inv.paymentImageUrl && (
+                                <DropdownMenu.Item 
+                                  onSelect={() => handleRejectInvoice(inv.id)}
+                                  className="px-4 py-2.5 text-sm font-medium text-amber-700 hover:bg-amber-50 transition-colors flex items-center outline-none cursor-pointer"
+                                >
+                                  <X className="w-4 h-4 mr-2.5 text-amber-500" />
+                                  Từ chối biên lai
+                                </DropdownMenu.Item>
+                              )}
+                              <DropdownMenu.Separator className="h-px bg-slate-100 my-1" />
+                              <DropdownMenu.Item 
+                                onSelect={() => handleDeleteInvoice(inv.id)}
+                                className="px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors flex items-center outline-none cursor-pointer"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2.5 text-red-400" />
+                                Xóa hóa đơn
+                              </DropdownMenu.Item>
+                            </DropdownMenu.Content>
+                          </DropdownMenu.Portal>
+                        </DropdownMenu.Root>
                       </div>
                     </td>
                   </tr>
@@ -202,9 +256,14 @@ export default function InvoicesPage() {
 
       <CreateInvoiceModal 
         isOpen={isModalOpen} 
-        onOpenChange={setIsModalOpen} 
+        onOpenChange={(open) => setIsModalOpen(open)}
         contracts={contracts}
-        onSuccess={fetchData}
+        onSuccess={() => mutate('/invoices')}
+      />
+      <ViewInvoiceModal 
+        isOpen={!!viewInvoice} 
+        onOpenChange={(open) => !open && setViewInvoice(null)} 
+        invoice={viewInvoice}
       />
     </div>
   );

@@ -27,9 +27,14 @@ public class ContractController {
         String userIdStr = (String) authentication.getPrincipal();
         boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isTenant = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_TENANT") || a.getAuthority().equals("TENANT"));
                 
         if (isAdmin) {
             return ResponseEntity.ok(contractService.getAllContracts());
+        } else if (isTenant) {
+            Long tenantId = Long.parseLong(userIdStr);
+            return ResponseEntity.ok(contractService.getContractsByTenantId(tenantId));
         } else {
             Long landlordId = Long.parseLong(userIdStr);
             return ResponseEntity.ok(contractService.getActiveContractsByLandlordId(landlordId)); // Tạm thời dùng lại, lý tưởng nhất là có endpoint riêng cho tất cả hợp đồng của chủ trọ

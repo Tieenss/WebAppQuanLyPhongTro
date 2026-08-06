@@ -38,7 +38,7 @@ public class User {
     @Column(length = 20)
     private String phone;
 
-    @Column(unique = true, length = 150)
+    @Column(length = 150)
     private String email;
 
     @Column(name = "avatar_url", length = 500)
