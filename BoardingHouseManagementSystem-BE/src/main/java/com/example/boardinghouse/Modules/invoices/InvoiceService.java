@@ -8,6 +8,8 @@ import com.example.boardinghouse.Modules.utility.UtilityRecord;
 import com.example.boardinghouse.Modules.utility.UtilityRecordRepository;
 import com.example.boardinghouse.Modules.user.bankaccount.BankAccount;
 import com.example.boardinghouse.Modules.user.bankaccount.BankAccountRepository;
+import com.example.boardinghouse.Modules.notification.event.NotificationEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +26,7 @@ public class InvoiceService {
     private final UtilityRecordRepository utilityRecordRepository;
     private final ContractRepository contractRepository;
     private final BankAccountRepository bankAccountRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public InvoiceResponse createInvoice(InvoiceCreateRequest request) {
         // Validate Contract
@@ -131,6 +134,13 @@ public class InvoiceService {
                 .build();
 
         Invoice savedInvoice = invoiceRepository.save(invoice);
+
+        // Phát event tạo thông báo cho Khách thuê
+        if (contract.getTenant() != null) {
+            String title = "Hoá đơn mới";
+            String content = "Chủ trọ vừa tạo hoá đơn mới cho phòng " + contract.getRoom().getRoomNumber() + " (Mã HĐ: " + savedInvoice.getInvoiceCode() + "). Vui lòng kiểm tra và thanh toán.";
+            eventPublisher.publishEvent(new NotificationEvent(this, contract.getRoom().getBuilding().getLandlordId(), contract.getTenant().getId(), NotificationEvent.TargetType.USER, title, content));
+        }
 
         return mapToResponse(savedInvoice);
     }

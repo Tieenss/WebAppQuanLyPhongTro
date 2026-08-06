@@ -85,6 +85,13 @@ public class NotificationService {
                 .content(noti.getContent())
                 .senderName(noti.getSender().getFullName())
                 .createdAt(noti.getCreatedAt())
+                .isRead(noti.isRead())
                 .build();
+    }
+
+    public void markAsRead(Long notificationId) {
+        Notification noti = notificationRepository.findById(notificationId).orElseThrow();
+        noti.setRead(true);
+        notificationRepository.save(noti);
     }
 }

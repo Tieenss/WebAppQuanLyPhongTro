@@ -12,4 +12,5 @@ public class NotificationResponse {
     private String content;
     private String senderName;
     private LocalDateTime createdAt;
+    private boolean isRead;
 }

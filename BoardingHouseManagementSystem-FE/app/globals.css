@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #007bff;
-  --color-primary-hover: #0056b3;
-  --color-background: #f0f8ff;
+  --color-primary: #4ba0e8;
+  --color-primary-hover: #3383d6;
+  --color-background: #f4fafe;
   --color-card: #ffffff;
   --color-text-main: #1f2937;
   --color-text-muted: #6b7280;
@@ -11,10 +11,22 @@
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
   --radius-3xl: 2rem;
+
+  /* Custom Pastel/Fresh Blue Palette to override Tailwind's default blue */
+  --color-blue-50: #f4fafe;
+  --color-blue-100: #e5f4fd;
+  --color-blue-200: #cbe9fa;
+  --color-blue-300: #a1d7f6;
+  --color-blue-400: #71bbf0;
+  --color-blue-500: #4ba0e8;
+  --color-blue-600: #3383d6;
+  --color-blue-700: #2869b1;
+  --color-blue-800: #265991;
+  --color-blue-900: #234c7a;
 }
 
 :root {
-  --background: #f0f8ff; /* Light sky background */
+  --background: #f4fafe; /* Light pastel sky background */
   --foreground: #1f2937;
 }
 

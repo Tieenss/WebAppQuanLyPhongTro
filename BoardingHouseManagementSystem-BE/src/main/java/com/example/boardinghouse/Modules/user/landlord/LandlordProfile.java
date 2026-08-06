@@ -41,4 +41,10 @@ public class LandlordProfile {
 
     @Column(name = "bank_account_holder", nullable = false, length = 150)
     private String bankAccountHolder;
+
+    @Column(name = "cccd_number", length = 20)
+    private String cccdNumber;
+
+    @Column(name = "cccd_place", length = 200)
+    private String cccdPlace;
 }

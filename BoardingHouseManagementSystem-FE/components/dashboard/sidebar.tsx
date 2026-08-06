@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Home, MessageSquare, Settings, Bell, User, FileText, AlertTriangle, ReceiptText, LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
 import type { UserRole } from "@/types/auth";
+import { useWebSocket } from "@/components/providers/WebSocketProvider";
 
 const landlordLinks = [
   { href: "/landlord/dashboard", label: "Home", icon: Home }, 
@@ -26,6 +27,7 @@ const tenantLinks = [
 
 export function DashboardSidebar({ role = "LANDLORD", isAdmin = false }: { role?: "LANDLORD" | "TENANT" | "ADMIN" | string, isAdmin?: boolean }) {
   const pathname = usePathname();
+  const { unreadCount } = useWebSocket();
   const links = role === "TENANT" ? tenantLinks : landlordLinks;
   
   return (
@@ -39,10 +41,17 @@ export function DashboardSidebar({ role = "LANDLORD", isAdmin = false }: { role?
               key={href} 
               href={href} 
               data-active={isActive}
-              className="flex shrink-0 items-center gap-3 rounded-md px-4 py-3 text-sm font-medium text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-colors data-[active=true]:bg-blue-600 data-[active=true]:text-white"
+              className="flex shrink-0 items-center justify-between rounded-md px-4 py-3 text-sm font-medium text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-colors data-[active=true]:bg-blue-600 data-[active=true]:text-white"
             >
-              <Icon className="h-5 w-5" />
-              {label}
+              <div className="flex items-center gap-3">
+                <Icon className="h-5 w-5" />
+                {label}
+              </div>
+              {href.includes("/notifications") && unreadCount > 0 && (
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
             </Link>
           );
         })}

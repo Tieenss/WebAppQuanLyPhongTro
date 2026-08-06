@@ -101,11 +101,11 @@ export function TenantModal({ isOpen, onClose, tenant, onSuccess }: TenantModalP
       let savedTenantData = tenant;
       if (tenant) {
         const res = await apiClient.put(`/tenants/${tenant.id}`, payload);
-        savedTenantData = res.data;
+        savedTenantData = res.data.data ? res.data.data : res.data;
         toast.success("Cập nhật thông tin khách thuê thành công");
       } else {
         const res = await apiClient.post("/tenants", payload);
-        savedTenantData = res.data;
+        savedTenantData = res.data.data ? res.data.data : res.data;
         toast.success("Thêm khách thuê thành công");
       }
       onSuccess(savedTenantData || undefined, submitAction === "save_and_contract");

@@ -22,6 +22,7 @@ interface ProfileData {
   bankAccountNumber?: string;
   bankAccountHolder?: string;
   cccdNumber?: string;
+  cccdPlace?: string;
   cccdFrontImg?: string;
   cccdBackImg?: string;
 }
@@ -31,7 +32,7 @@ export default function UserProfile() {
   const [profile, setProfile] = useState<ProfileData>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   const [passwordForm, setPasswordForm] = useState({ oldPassword: "", newPassword: "", confirmPassword: "" });
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
@@ -167,10 +168,10 @@ export default function UserProfile() {
               <div className="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center transition-all">
                 <Camera className="w-6 h-6 text-white" />
               </div>
-              <input 
-                type="file" 
-                accept="image/*" 
-                className="absolute inset-0 opacity-0 cursor-pointer" 
+              <input
+                type="file"
+                accept="image/*"
+                className="absolute inset-0 opacity-0 cursor-pointer"
                 onChange={(e) => handleFileChange(e, "avatarUrl")}
               />
             </div>
@@ -266,6 +267,28 @@ export default function UserProfile() {
                     <Building2 className="w-5 h-5 text-indigo-500" />
                     Thông tin Kinh doanh
                   </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Số CMND/CCCD:</label>
+                      <input
+                        type="text"
+                        name="cccdNumber"
+                        value={profile.cccdNumber || ""}
+                        onChange={handleInputChange}
+                        className="block w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-slate-50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Nơi cấp:</label>
+                      <input
+                        type="text"
+                        name="cccdPlace"
+                        value={profile.cccdPlace || ""}
+                        onChange={handleInputChange}
+                        className="block w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-slate-50"
+                      />
+                    </div>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Tên Doanh nghiệp / Hộ KD</label>
@@ -312,7 +335,17 @@ export default function UserProfile() {
                       className="block w-full md:w-1/2 px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm bg-slate-50"
                     />
                   </div>
-                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Nơi cấp CCCD</label>
+                    <input
+                      type="text"
+                      name="cccdPlace"
+                      value={profile.cccdPlace || ""}
+                      onChange={handleInputChange}
+                      className="block w-full md:w-1/2 px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm bg-slate-50"
+                    />
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-2">Ảnh mặt trước CCCD</label>
@@ -330,10 +363,10 @@ export default function UserProfile() {
                             <span className="text-sm">Bấm để tải ảnh lên</span>
                           </div>
                         )}
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                           onChange={(e) => handleFileChange(e, "cccdFrontImg")}
                         />
                       </div>
@@ -355,10 +388,10 @@ export default function UserProfile() {
                             <span className="text-sm">Bấm để tải ảnh lên</span>
                           </div>
                         )}
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                           onChange={(e) => handleFileChange(e, "cccdBackImg")}
                         />
                       </div>
@@ -370,7 +403,7 @@ export default function UserProfile() {
           </div>
         </form>
       </div>
-      
+
       {/* Change Password Section */}
       <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden mt-8">
         <form onSubmit={handlePasswordSubmit} className="p-8">
@@ -413,7 +446,7 @@ export default function UserProfile() {
               />
             </div>
           </div>
-          
+
           <div className="mt-6">
             <button
               type="submit"

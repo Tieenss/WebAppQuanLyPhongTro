@@ -42,4 +42,10 @@ public class NotificationController {
             @RequestParam String content) {
         return ResponseEntity.ok(notificationService.sendToBuilding(senderId, buildingId, title, content));
     }
+
+    @PutMapping("/{id}/read")
+    public ResponseEntity<Void> markAsRead(@PathVariable Long id) {
+        notificationService.markAsRead(id);
+        return ResponseEntity.ok().build();
+    }
 }

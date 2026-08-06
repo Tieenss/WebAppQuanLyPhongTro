@@ -78,6 +78,38 @@ public class ContractService {
             throw new IllegalArgumentException("Mã hợp đồng đã tồn tại");
         }
 
+        // Tự động điền thông tin chủ trọ nếu để trống
+        String finalLandlordName = request.getLandlordName();
+        String finalLandlordPhone = request.getLandlordPhone();
+        String finalLandlordCccd = request.getLandlordCccd();
+        String finalLandlordCccdPlace = request.getLandlordCccdPlace();
+        
+        if (room.getBuilding() != null && room.getBuilding().getLandlordId() != null) {
+            User landlord = userRepository.findById(room.getBuilding().getLandlordId()).orElse(null);
+            if (landlord != null) {
+                if (finalLandlordName == null || finalLandlordName.isEmpty()) finalLandlordName = landlord.getFullName();
+                if (finalLandlordPhone == null || finalLandlordPhone.isEmpty()) finalLandlordPhone = landlord.getPhone();
+                if (landlord.getLandlordProfile() != null) {
+                    if (finalLandlordCccd == null || finalLandlordCccd.isEmpty()) finalLandlordCccd = landlord.getLandlordProfile().getCccdNumber();
+                    if (finalLandlordCccdPlace == null || finalLandlordCccdPlace.isEmpty()) finalLandlordCccdPlace = landlord.getLandlordProfile().getCccdPlace();
+                }
+            }
+        }
+
+        // Tự động điền thông tin người thuê nếu để trống
+        String finalTenantName = request.getTenantName();
+        String finalTenantPhone = request.getTenantPhone();
+        String finalTenantCccd = request.getTenantCccd();
+        String finalTenantCccdPlace = request.getTenantCccdPlace();
+
+        if (tenant != null) {
+            if (finalTenantName == null || finalTenantName.isEmpty()) finalTenantName = tenant.getFullName();
+            if (finalTenantPhone == null || finalTenantPhone.isEmpty()) finalTenantPhone = tenant.getPhone();
+            if (tenant.getTenantProfile() != null) {
+                if (finalTenantCccd == null || finalTenantCccd.isEmpty()) finalTenantCccd = tenant.getTenantProfile().getCccdNumber();
+            }
+        }
+
         Contract contract = Contract.builder()
                 .contractCode(code)
                 .room(room)
@@ -97,14 +129,14 @@ public class ContractService {
                 .terms(request.getTerms())
                 .appointmentId(request.getAppointmentId())
                 .status(request.getStatus() != null ? request.getStatus() : "active")
-                .landlordName(request.getLandlordName())
-                .landlordCccd(request.getLandlordCccd())
-                .landlordCccdPlace(request.getLandlordCccdPlace())
-                .landlordPhone(request.getLandlordPhone())
-                .tenantName(request.getTenantName())
-                .tenantCccd(request.getTenantCccd())
-                .tenantCccdPlace(request.getTenantCccdPlace())
-                .tenantPhone(request.getTenantPhone())
+                .landlordName(finalLandlordName)
+                .landlordCccd(finalLandlordCccd)
+                .landlordCccdPlace(finalLandlordCccdPlace)
+                .landlordPhone(finalLandlordPhone)
+                .tenantName(finalTenantName)
+                .tenantCccd(finalTenantCccd)
+                .tenantCccdPlace(finalTenantCccdPlace)
+                .tenantPhone(finalTenantPhone)
                 .build();
 
         // Cập nhật trạng thái phòng
@@ -185,8 +217,15 @@ public class ContractService {
 
         // Giải phóng phòng
         Room room = contract.getRoom();
-        room.setStatus("available");
-        roomRepository.save(room);
+        if (room != null) {
+            room.setStatus("available");
+            roomRepository.save(room);
+        }
+
+        // Đánh dấu khách thuê đã rời đi
+        if (contract.getTenant() != null && contract.getTenant().getTenantProfile() != null) {
+            contract.getTenant().getTenantProfile().setIsActive(false);
+        }
 
         return mapToResponse(contract);
     }
@@ -233,6 +272,19 @@ public class ContractService {
     public void deleteContract(Long id) {
         Contract contract = contractRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Contract not found"));
+
+        // Giải phóng phòng
+        Room room = contract.getRoom();
+        if (room != null) {
+            room.setStatus("available");
+            roomRepository.save(room);
+        }
+
+        // Đánh dấu khách thuê đã rời đi
+        if (contract.getTenant() != null && contract.getTenant().getTenantProfile() != null) {
+            contract.getTenant().getTenantProfile().setIsActive(false);
+        }
+
         contractRepository.delete(contract);
     }
 
