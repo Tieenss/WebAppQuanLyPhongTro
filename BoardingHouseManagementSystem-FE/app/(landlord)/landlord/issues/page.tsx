@@ -97,7 +97,7 @@ export default function LandlordIssuesPage() {
             <ArrowLeft className="w-6 h-6" />
           </Link>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Quản lý Sự cố</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Quản lý sự cố</h1>
             <p className="mt-1 text-sm text-slate-500">Theo dõi và cập nhật trạng thái các yêu cầu sửa chữa, sự cố từ người thuê.</p>
           </div>
         </div>

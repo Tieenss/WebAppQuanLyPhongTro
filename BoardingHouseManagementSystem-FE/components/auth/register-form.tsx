@@ -13,7 +13,7 @@ import { useState } from "react";
 const registerSchema = z.object({ 
   fullName: z.string().trim().min(2, "Vui lòng nhập họ và tên hợp lệ"),
   username: z.string().trim().min(4, "Tên đăng nhập tối thiểu 4 ký tự"),
-  phone: z.string().trim().min(10, "Số điện thoại không hợp lệ"),
+  phone: z.string().trim().regex(/^\d{10}$/, "Số điện thoại phải có đúng 10 chữ số"),
   password: z.string().min(6, "Mật khẩu tối thiểu 6 ký tự"),
   confirmPassword: z.string().min(6, "Mật khẩu tối thiểu 6 ký tự"),
   role: z.enum(["LANDLORD", "TENANT"]),

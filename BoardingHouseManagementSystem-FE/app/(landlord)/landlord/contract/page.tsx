@@ -57,6 +57,9 @@ export default function ContractsPage() {
   const [rooms, setRooms] = useState<any[]>([]);
   const [selectedBuildingId, setSelectedBuildingId] = useState<string>("all");
   const [roomDropdownOpen, setRoomDropdownOpen] = useState(false);
+  const [landlordProfile, setLandlordProfile] = useState<any>(null);
+  const [tenants, setTenants] = useState<any[]>([]);
+  const [tenantDropdownOpen, setTenantDropdownOpen] = useState(false);
 
   useEffect(() => {
     fetchContracts();
@@ -90,8 +93,8 @@ export default function ContractsPage() {
       setEditForm(enhancedContract);
       
       // Tìm phòng và toà nhà cho hợp đồng này để gán selectedBuildingId nếu có thể
-      if (room && room.building?.id) {
-        setSelectedBuildingId(room.building.id.toString());
+      if (room && room.buildingId) {
+        setSelectedBuildingId(room.buildingId.toString());
       }
     }
   }, [contracts, rooms, selectedContract, isCreating]);
@@ -105,6 +108,13 @@ export default function ContractsPage() {
       const rRes = await apiClient.get('/rooms');
       const rData = Array.isArray(rRes.data) ? rRes.data : rRes.data?.data || [];
       setRooms(rData);
+
+      const pRes = await apiClient.get('/profile/me');
+      setLandlordProfile(pRes.data);
+
+      const tRes = await apiClient.get('/tenants');
+      const tData = Array.isArray(tRes.data) ? tRes.data : tRes.data?.data || [];
+      setTenants(tData);
     } catch (error) {
       console.error("Error fetching dependencies", error);
     }
@@ -151,8 +161,8 @@ export default function ContractsPage() {
     setEditForm(enhancedContract);
     
     // Tìm phòng và toà nhà cho hợp đồng này để gán selectedBuildingId nếu có thể
-    if (room && room.building?.id) {
-      setSelectedBuildingId(room.building.id.toString());
+    if (room && room.buildingId) {
+      setSelectedBuildingId(room.buildingId.toString());
     }
   };
 
@@ -174,6 +184,10 @@ export default function ContractsPage() {
       terms: "1. Bên thuê phải thanh toán đúng hạn.\n2. Giữ gìn vệ sinh chung.\n3. Không gây ồn ào sau 10h đêm.",
       assets: "Điều hòa: 1 cái\nGiường: 1 chiếc\nTủ quần áo: 1 cái\nChìa khóa: 2 cái",
       paymentDate: "5",
+      landlordName: landlordProfile?.fullName || "",
+      landlordPhone: landlordProfile?.phone || "",
+      landlordCccd: landlordProfile?.cccdNumber || "",
+      landlordCccdPlace: "Cục Cảnh sát QLHC về TTXH",
     });
     setSelectedBuildingId("all");
   };
@@ -211,6 +225,23 @@ export default function ContractsPage() {
   const handleSave = async () => {
     try {
       const payload = { ...editForm };
+      
+      if (payload.landlordPhone && !/^\d{10}$/.test(payload.landlordPhone)) {
+        toast.error("Số điện thoại bên A (Chủ trọ) phải có đúng 10 chữ số");
+        return;
+      }
+      if (payload.tenantPhone && !/^\d{10}$/.test(payload.tenantPhone)) {
+        toast.error("Số điện thoại bên B (Khách thuê) phải có đúng 10 chữ số");
+        return;
+      }
+      if (payload.landlordCccd && !/^\d{10,12}$/.test(payload.landlordCccd)) {
+        toast.error("CCCD/CMND bên A (Chủ trọ) phải có từ 10 đến 12 chữ số");
+        return;
+      }
+      if (payload.tenantCccd && !/^\d{10,12}$/.test(payload.tenantCccd)) {
+        toast.error("CCCD/CMND bên B (Khách thuê) phải có từ 10 đến 12 chữ số");
+        return;
+      }
       
       const selectedRoom = rooms.find(r => r.roomNumber === payload.roomNumber || r.id?.toString() === payload.roomNumber);
       if (selectedRoom) {
@@ -274,7 +305,7 @@ export default function ContractsPage() {
             <ArrowLeft className="w-6 h-6" />
           </Link>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Quản lý Hợp đồng</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Quản lý hợp đồng</h1>
             <p className="mt-1 text-sm text-slate-500">Quản lý danh sách hợp đồng thuê phòng, thời hạn và trạng thái.</p>
           </div>
         </div>
@@ -423,10 +454,11 @@ export default function ContractsPage() {
                 <div className="grid grid-cols-[120px_1fr] items-center gap-y-3">
                   <label className="text-sm font-medium text-slate-700">Mã HD:</label>
                   <Input 
-                    readOnly={!isCreating && !isEditing} 
+                    disabled={isCreating}
+                    readOnly={!isCreating} 
                     value={(isEditing || isCreating) ? (editForm.contractCode || "") : (selectedContract?.contractCode || "")}
                     onChange={e => setEditForm({...editForm, contractCode: e.target.value})}
-                    className="bg-slate-100/50 border-slate-200 h-9" 
+                    className="bg-slate-100/50 border-slate-200 h-9 disabled:bg-slate-200 disabled:cursor-not-allowed" 
                   />
                   
                   <label className="text-sm font-medium text-slate-700">Tòa nhà:</label>
@@ -438,7 +470,7 @@ export default function ContractsPage() {
                   >
                     <option value="all">Tất cả</option>
                     {buildings.map(b => (
-                    <option key={b.id} value={b.name}>{b.name}</option>
+                    <option key={b.id} value={b.id.toString()}>{b.name}</option>
                   ))}
                   </select>
 
@@ -464,7 +496,7 @@ export default function ContractsPage() {
                     {roomDropdownOpen && (isCreating || isEditing) && (
                       <ul className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                         {rooms
-                          .filter(r => selectedBuildingId === "all" || r.building?.id?.toString() === selectedBuildingId)
+                          .filter(r => selectedBuildingId === "all" || r.buildingId?.toString() === selectedBuildingId)
                           .filter(r => !contracts.some(c => c.status === "active" && (c.roomNumber === r.roomNumber || c.roomNumber === r.id?.toString())))
                           .filter(r => (r.roomNumber || r.name || r.id).toLowerCase().includes((editForm.roomNumber || "").toLowerCase()))
                           .map(r => (
@@ -479,7 +511,7 @@ export default function ContractsPage() {
                             {r.name || r.roomNumber}
                           </li>
                         ))}
-                        {rooms.filter(r => selectedBuildingId === "all" || r.building?.id?.toString() === selectedBuildingId).filter(r => !contracts.some(c => c.status === "active" && (c.roomNumber === r.roomNumber || c.roomNumber === r.id?.toString()))).filter(r => (r.roomNumber || r.name || r.id).toLowerCase().includes((editForm.roomNumber || "").toLowerCase())).length === 0 && (
+                        {rooms.filter(r => selectedBuildingId === "all" || r.buildingId?.toString() === selectedBuildingId).filter(r => !contracts.some(c => c.status === "active" && (c.roomNumber === r.roomNumber || c.roomNumber === r.id?.toString()))).filter(r => (r.roomNumber || r.name || r.id).toLowerCase().includes((editForm.roomNumber || "").toLowerCase())).length === 0 && (
                           <li className="relative cursor-default select-none py-2 pl-3 pr-9 text-slate-500">
                             Không tìm thấy phòng
                           </li>
@@ -550,12 +582,55 @@ export default function ContractsPage() {
                   <h3 className="font-semibold text-slate-800 mb-3">Thông tin người thuê</h3>
                   <div className="grid grid-cols-[120px_1fr] items-center gap-y-3">
                     <label className="text-sm font-medium text-slate-700">Họ tên:</label>
-                    <Input 
-                      readOnly={!isCreating && !isEditing} 
-                      value={(isEditing || isCreating) ? (editForm.tenantName || "") : (selectedContract?.tenantName || "")}
-                      onChange={e => setEditForm({...editForm, tenantName: e.target.value})}
-                      className="bg-slate-100/50 border-slate-200 h-9" 
-                    />
+                    <div className="relative">
+                      <input 
+                        disabled={!isCreating && !isEditing}
+                        value={(isEditing || isCreating) ? (editForm.tenantName || "") : (selectedContract?.tenantName || "")}
+                        onChange={e => {
+                          setEditForm({...editForm, tenantName: e.target.value});
+                          setTenantDropdownOpen(true);
+                        }}
+                        onClick={() => { if (isCreating || isEditing) setTenantDropdownOpen(true); }}
+                        onBlur={() => setTimeout(() => setTenantDropdownOpen(false), 200)}
+                        placeholder="Chọn hoặc gõ tên người thuê"
+                        className="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 pr-8 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
+                      />
+                      <ChevronDown 
+                        className="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 cursor-pointer"
+                        onClick={() => { if (isCreating || isEditing) setTenantDropdownOpen(!tenantDropdownOpen); }}
+                      />
+                      
+                      {tenantDropdownOpen && (isCreating || isEditing) && (
+                        <ul className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                          {tenants
+                            .filter(t => !contracts.some(c => c.status === "active" && c.tenantCccd === t.cccdNumber))
+                            .filter(t => (t.fullName || "").toLowerCase().includes((editForm.tenantName || "").toLowerCase()))
+                            .map(t => (
+                            <li
+                              key={t.id}
+                              className="relative cursor-pointer select-none py-2 pl-3 pr-9 hover:bg-slate-100 text-slate-900"
+                              onClick={() => {
+                                setEditForm({
+                                  ...editForm,
+                                  tenantName: t.fullName || "",
+                                  tenantPhone: t.phone || "",
+                                  tenantCccd: t.cccdNumber || "",
+                                  tenantId: t.id
+                                });
+                                setTenantDropdownOpen(false);
+                              }}
+                            >
+                              {t.fullName} - {t.phone}
+                            </li>
+                          ))}
+                          {tenants.filter(t => !contracts.some(c => c.status === "active" && c.tenantCccd === t.cccdNumber)).filter(t => (t.fullName || "").toLowerCase().includes((editForm.tenantName || "").toLowerCase())).length === 0 && (
+                            <li className="relative cursor-default select-none py-2 pl-3 pr-9 text-slate-500">
+                              Không tìm thấy khách thuê
+                            </li>
+                          )}
+                        </ul>
+                      )}
+                    </div>
                     
                     <label className="text-sm font-medium text-slate-700">CCCD:</label>
                     <div className="flex gap-2 items-center">

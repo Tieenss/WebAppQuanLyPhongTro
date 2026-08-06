@@ -295,7 +295,7 @@ export default function RoomsPage() {
             <ArrowLeft className="w-6 h-6" />
           </Link>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Quản lý Phòng</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Quản lý phòng</h1>
             <p className="mt-1 text-sm text-slate-500">Quản lý danh sách phòng, giá thuê và trạng thái từng phòng.</p>
           </div>
         </div>

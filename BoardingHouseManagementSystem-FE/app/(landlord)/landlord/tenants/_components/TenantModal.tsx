@@ -21,10 +21,10 @@ import { toast } from "sonner";
 
 const tenantSchema = z.object({
   fullName: z.string().min(2, "Tên phải có ít nhất 2 ký tự"),
-  phone: z.string().min(10, "Số điện thoại không hợp lệ"),
+  phone: z.string().regex(/^\d{10}$/, "Số điện thoại phải có đúng 10 chữ số"),
   email: z.string().email("Email không hợp lệ").or(z.literal("")),
   avatarUrl: z.string().nullable(),
-  cccdNumber: z.string().nullable(),
+  cccdNumber: z.string().regex(/^\d{10,12}$/, "CCCD/CMND phải có từ 10 đến 12 chữ số").nullable().or(z.literal("")),
   cccdFrontImg: z.string().nullable(),
   cccdBackImg: z.string().nullable(),
   isActive: z.boolean(),

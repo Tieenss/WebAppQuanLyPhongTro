@@ -36,6 +36,17 @@ export function CreateTenantModal({ isOpen, onOpenChange, onSuccess }: ModalProp
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!/^\d{10}$/.test(formData.phone)) {
+      toast.error("Số điện thoại phải có đúng 10 chữ số");
+      return;
+    }
+
+    if (formData.cccdNumber && !/^\d{10,12}$/.test(formData.cccdNumber)) {
+      toast.error("CCCD/CMND phải có từ 10 đến 12 chữ số");
+      return;
+    }
+
     setLoading(true);
     try {
       let avatarUrl = "";

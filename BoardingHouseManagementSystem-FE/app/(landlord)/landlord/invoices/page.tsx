@@ -70,7 +70,7 @@ export default function InvoicesPage() {
             <ArrowLeft className="w-6 h-6" />
           </Link>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Quản lý Hóa đơn</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Quản lý hóa đơn</h1>
             <p className="mt-1 text-sm text-slate-500">Tạo mới, theo dõi và quản lý các khoản thu tiền phòng, điện nước.</p>
           </div>
         </div>

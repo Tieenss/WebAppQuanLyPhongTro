@@ -218,7 +218,7 @@ export default function BuildingsPage() {
             <ArrowLeft className="w-6 h-6" />
           </Link>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Quản lý Nhà trọ</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Quản lý nhà trọ</h1>
             <p className="mt-1 text-sm text-slate-500">Quản lý thông tin chung, địa chỉ và tiện nghi của các tòa nhà / khu trọ.</p>
           </div>
         </div>

@@ -76,6 +76,17 @@ export default function UserProfile() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (profile.phone && !/^\d{10}$/.test(profile.phone)) {
+      toast.error("Số điện thoại phải có đúng 10 chữ số");
+      return;
+    }
+
+    if (profile.cccdNumber && !/^\d{10,12}$/.test(profile.cccdNumber)) {
+      toast.error("CCCD/CMND phải có từ 10 đến 12 chữ số");
+      return;
+    }
+
     setIsSaving(true);
     try {
       const res = await apiClient.put("/profile/me", profile);

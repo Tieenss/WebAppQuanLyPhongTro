@@ -1,6 +1,7 @@
 package com.example.boardinghouse.Modules.contracts.dto;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -40,12 +41,16 @@ public class ContractRequest {
     private String status;
 
     private String landlordName;
+    @Pattern(regexp = "^\\d{10,12}$", message = "CCCD/CMND chủ trọ phải có từ 10 đến 12 chữ số")
     private String landlordCccd;
     private String landlordCccdPlace;
+    @Pattern(regexp = "^\\d{10}$", message = "Số điện thoại chủ trọ phải có đúng 10 chữ số")
     private String landlordPhone;
 
     private String tenantName;
+    @Pattern(regexp = "^\\d{10,12}$", message = "CCCD/CMND người thuê phải có từ 10 đến 12 chữ số")
     private String tenantCccd;
     private String tenantCccdPlace;
+    @Pattern(regexp = "^\\d{10}$", message = "Số điện thoại người thuê phải có đúng 10 chữ số")
     private String tenantPhone;
 }
