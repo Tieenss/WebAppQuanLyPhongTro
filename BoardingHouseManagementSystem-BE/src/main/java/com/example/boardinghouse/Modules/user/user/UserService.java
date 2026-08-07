@@ -29,6 +29,16 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return mapToResponse(user);
     }
+    
+    public List<UserResponse> searchUsers(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return List.of();
+        }
+        return userRepository.findTop10ByFullNameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrPhoneContainingIgnoreCase(keyword, keyword, keyword)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
 
     public UserResponse createUser(UserRequest request) {
         // Simple create without password hashing for now, as BCrypt is not guaranteed to be configured yet

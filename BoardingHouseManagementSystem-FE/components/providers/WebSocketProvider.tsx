@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useSession } from "next-auth/react";
 import { Client, IMessage } from "@stomp/stompjs";
-import SockJS from "sockjs-client";
 import { toast } from "sonner";
 
 interface WebSocketContextProps {
@@ -34,7 +33,10 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
     if (!session?.user?.id) return;
     try {
       const res = await fetch(`http://localhost:8080/api/notifications/user/${session.user.id}`);
-      const data = await res.json();
+      if (!res.ok) return;
+      const text = await res.text();
+      if (!text) return;
+      const data = JSON.parse(text);
       const notis = data.data || data || [];
       setNotifications(notis);
       setUnreadCount(notis.filter((n: any) => !n.isRead).length);
@@ -50,37 +52,48 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!session?.user?.id) return;
 
-    const socket = new SockJS("http://localhost:8080/ws-chat");
-    const client = new Client({
-      webSocketFactory: () => socket,
-      debug: (str) => console.log(str),
-      onConnect: () => {
-        console.log("Connected to WebSocket");
-        // Subscribe to user-specific channel
-        client.subscribe(`/topic/user/${session.user.id}/notifications`, (message: IMessage) => {
-          if (message.body) {
-            const notification = JSON.parse(message.body);
-            setNotifications((prev) => [notification, ...prev]);
-            setUnreadCount((prev) => prev + 1);
-            
-            // Show toast
-            toast(notification.title || "Thông báo mới", {
-              description: notification.content || notification.message,
-            });
-          }
-        });
-      },
-      onStompError: (frame) => {
-        console.error("Broker reported error: " + frame.headers["message"]);
-        console.error("Additional details: " + frame.body);
-      },
-    });
+    let isActive = true;
+    let client: Client | null = null;
 
-    client.activate();
-    setStompClient(client);
+    const initWS = async () => {
+      const SockJS = (await import("sockjs-client")).default;
+      if (!isActive) return;
+
+      const socket = new SockJS("http://localhost:8080/ws-chat");
+      client = new Client({
+        webSocketFactory: () => socket as any,
+        debug: (str) => console.log(str),
+        onConnect: () => {
+          console.log("Connected to WebSocket");
+          // Subscribe to user-specific channel
+          client!.subscribe(`/topic/user/${session.user.id}/notifications`, (message: IMessage) => {
+            if (message.body) {
+              const notification = JSON.parse(message.body);
+              setNotifications((prev) => [notification, ...prev]);
+              setUnreadCount((prev) => prev + 1);
+              
+              // Show toast
+              toast(notification.title || "Thông báo mới", {
+                description: notification.content || notification.message,
+              });
+            }
+          });
+        },
+        onStompError: (frame) => {
+          console.error("Broker reported error: " + frame.headers["message"]);
+          console.error("Additional details: " + frame.body);
+        },
+      });
+
+      client.activate();
+      setStompClient(client);
+    };
+
+    initWS();
 
     return () => {
-      client.deactivate();
+      isActive = false;
+      if (client) client.deactivate();
     };
   }, [session?.user?.id]);
 

@@ -1,6 +1,5 @@
 package com.example.boardinghouse.Modules.chat;
 
-import com.example.boardinghouse.Modules.user.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,13 +7,10 @@ import java.time.LocalDateTime;
 
 /**
  * Entity đại diện cho bảng 'conversations'.
- * Lưu trữ thông tin một phiên chat giữa Khách và Chủ trọ.
+ * Lưu trữ thông tin một phiên chat (1-1 hoặc nhóm).
  */
 @Entity
-@Table(name = "conversations", uniqueConstraints = {
-        // Đảm bảo giữa 1 khách và 1 chủ trọ chỉ có 1 cuộc hội thoại duy nhất
-        @UniqueConstraint(columnNames = {"guest_id", "landlord_id"})
-})
+@Table(name = "conversations")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,15 +22,17 @@ public class Conversation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Người nhắn tin (Khách vãng lai / Khách thuê)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "guest_id", nullable = false)
-    private User guest;
+    // Tên của nhóm chat (chỉ dùng nếu là group chat)
+    @Column(name = "chat_name", length = 255)
+    private String chatName;
 
-    // Chủ trọ tiếp nhận tin nhắn
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "landlord_id", nullable = false)
-    private User landlord;
+    // Phân biệt chat 1-1 và chat nhóm
+    @Column(name = "is_group_chat")
+    private Boolean isGroupChat = false;
+
+    // Ảnh đại diện của nhóm (nếu có)
+    @Column(name = "chat_image", length = 500)
+    private String chatImage;
 
     @org.hibernate.annotations.CreationTimestamp
     @Column(name = "created_at", updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")

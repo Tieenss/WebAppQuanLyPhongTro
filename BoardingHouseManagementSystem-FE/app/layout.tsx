@@ -4,6 +4,7 @@ import { SessionProvider } from "@/components/providers/session-provider";
 import { WebSocketProvider } from "@/components/providers/WebSocketProvider";
 import { AppToaster } from "@/components/ui/sonner";
 
+import ChatWidget from "@/components/chat/ChatWidget";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { SWRProvider } from "@/app/components/SWRProvider";
 
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <MainLayout>
                 {children}
                 <AppToaster />
+                <ChatWidget />
               </MainLayout>
             </WebSocketProvider>
           </SWRProvider>

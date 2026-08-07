@@ -159,13 +159,15 @@ export default function UserProfile() {
         {/* Header Banner */}
         <div className="h-32 bg-gradient-to-r from-blue-500 to-indigo-600 relative">
           <div className="absolute -bottom-12 left-8">
-            <div className="relative w-24 h-24 rounded-full border-4 border-white bg-slate-100 overflow-hidden flex items-center justify-center group cursor-pointer">
+            <div
+                className="relative w-24 h-24 rounded-full border-4 border-white bg-slate-100 overflow-hidden flex items-center justify-center group cursor-pointer">
               {profile.avatarUrl ? (
-                <Image src={profile.avatarUrl} alt="Avatar" fill className="object-cover" />
+                  <Image src={profile.avatarUrl} alt="Avatar" fill className="object-cover"/>
               ) : (
-                <User className="w-10 h-10 text-slate-400" />
+                  <User className="w-10 h-10 text-slate-400"/>
               )}
-              <div className="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center transition-all">
+              <div
+                  className="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center transition-all">
                 <Camera className="w-6 h-6 text-white" />
               </div>
               <input

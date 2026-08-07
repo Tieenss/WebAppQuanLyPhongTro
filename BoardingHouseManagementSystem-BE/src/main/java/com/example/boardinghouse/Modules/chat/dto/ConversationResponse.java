@@ -10,10 +10,9 @@ import lombok.Data;
 @Builder
 public class ConversationResponse {
     private Long id;
-    private Long guestId;
-    private String guestName;
-    private Long landlordId;
-    private String landlordName;
+    private String chatName; // Tên nhóm hoặc tên người kia (nếu là 1-1)
+    private Boolean isGroupChat;
+    private String chatImage; // Avatar nhóm hoặc người kia
     private String lastMessage; // Tin nhắn cuối cùng
     private Long unreadCount;   // Số tin nhắn chưa đọc
 }

@@ -19,4 +19,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByLandlordIdAndRole(Long landlordId, String role);
     Optional<User> findByIdAndLandlordId(Long id, Long landlordId);
     List<User> findByRole(String role);
+
+    // Tìm kiếm user cho chức năng chat
+    List<User> findTop10ByFullNameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrPhoneContainingIgnoreCase(String name, String email, String phone);
 }
