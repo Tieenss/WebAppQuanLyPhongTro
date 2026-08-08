@@ -1,4 +1,3 @@
-import heic2any from "heic2any";
 import imageCompression from "browser-image-compression";
 
 /**
@@ -17,6 +16,7 @@ export async function processImageBeforeUpload(file: File): Promise<File> {
     imageFile.name.toLowerCase().endsWith(".heif")
   ) {
     try {
+      const heic2any = (await import("heic2any")).default;
       const convertedBlob = await heic2any({
         blob: imageFile,
         toType: "image/jpeg",
